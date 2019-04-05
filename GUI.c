@@ -49,17 +49,17 @@ void initializeBoard (int board[][COLS]) {
     board [0][0] = 1;
     board [1][4] = 1;
     // GREEN
-    board [0][2] = 2;
+    board [2][0] = 2;
     board [1][3] = 2;
     // BLUE
-    board [1][2] = 3;
-    board [4][2] = 3;
+    board [2][1] = 3;
+    board [2][4] = 3;
     // YELLOW
-    board [0][4] = 4;
+    board [4][0] = 4;
     board [3][3] = 4;
     // ORANGE
-    board [1][4] = 5;
-    board [4][3] = 5;
+    board [4][1] = 5;
+    board [3][4] = 5;
 
 }
 
@@ -110,10 +110,11 @@ int main(void)
     //coloring a square (testing code for now)
     int row = 0;
     int col = 0;
-    // this doesn't want to work:
+    //this doesn't want to work:
     for (row = 0; row < ROWS; row++) {
         for (col = 0; col < COLS; col++) {
             if (board[row][col] == RED) {
+                printf("Color: Red \n");
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
@@ -124,6 +125,7 @@ int main(void)
             }
 
             else if (board[row][col] == GREEN) {
+                printf("Color: Green \n");
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
@@ -134,6 +136,7 @@ int main(void)
             }
 
             else if (board[row][col] == BLUE) {
+                printf("Color: Blue \n");
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
@@ -144,6 +147,7 @@ int main(void)
             }
 
             else if (board[row][col] == YELLOW) {
+                printf("Color: Yellow \n");
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
@@ -154,6 +158,7 @@ int main(void)
             }
 
             else if (board[row][col] == ORANGE) {
+                printf("Color: Orange \n");
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
@@ -168,6 +173,8 @@ int main(void)
             // printf("\n");
         }
     }
+
+    //fill_color(0, 2, GREEN_U16);
 
     // Background
     // Horizontal Line
@@ -195,7 +202,7 @@ void plot_pixel(int x, int y, short int line_color)
 void fill_color(int x, int y, short int color) {
 //printf("position (x,y): " );
      int xpos =  x * 64;
-     int ypos =  x * 48;
+     int ypos =  y * 48;
 
     // //printf("position (x,y): ");
      // printf("%d", xpos);
@@ -206,7 +213,7 @@ void fill_color(int x, int y, short int color) {
     int tempY = ypos;
     //
     for (xpos = x * 64; xpos < (tempX + 64); xpos++) {
-        for (ypos = x * 48; ypos < (tempY + 48); ypos++) {
+        for (ypos = y * 48; ypos < (tempY + 48); ypos++) {
             plot_pixel(xpos, ypos, color);
         }
     }

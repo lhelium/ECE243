@@ -4,12 +4,64 @@ volatile int pixel_buffer_start; // global variable
 #include <stdio.h>
 #include <stdbool.h>
 
+#define ROWS 5
+#define COLS 5
+
+// defining the colors
+#define RED 1
+#define GREEN 2
+#define BLUE 3
+#define YELLOW 4
+#define ORANGE 5
+
+//define u16 code for the colors
+#define RED_U16 0xF800
+#define GREEN_U16 0x7E0
+#define BLUE_U16 0x1F
+#define YELLOW_U16 0xFFE0
+#define ORANGE_U16 0xFBE0
+#define BLACK_U16 0x0000
+#define WHITE_U16 0xFFFF
+
+
+
 void clear_screen();
 void wait_for_vsync();
 void plot_pixel(int x, int y, short int line_color);
 void draw_line(int x0, int x1, int y0, int y1, short int line_color);
 void swap(int* a, int*b); // you gotta use pointers
-void fill_color(int fill_x[], int fill_y[], int color_display[]);
+void fill_color(int x, int y, short int color);
+void initializeBoard (int board[][COLS]);
+
+void initializeBoard (int board[][COLS]) {
+// 1 for red, 2 for green, 3 for blue, 4 for yellow, 5 for orange
+    //initialize everything to 0 first
+    int i = 0;
+    int j = 0;
+    for (i = 0; i < ROWS; i++) {
+        for (j = 0; j < COLS; j++) {
+            board [i][j] = 0;
+        }
+    }
+
+    // hardcoding the positions
+    // RED
+    board [0][0] = 1;
+    board [1][4] = 1;
+    // GREEN
+    board [0][2] = 2;
+    board [1][3] = 2;
+    // BLUE
+    board [1][2] = 3;
+    board [4][2] = 3;
+    // YELLOW
+    board [0][4] = 4;
+    board [3][3] = 4;
+    // ORANGE
+    board [1][4] = 5;
+    board [4][3] = 5;
+
+}
 
 int main(void)
 {
@@ -17,21 +69,28 @@ int main(void)
     /* Read location of the pixel buffer from the pixel buffer controller */
     pixel_buffer_start = *pixel_ctrl_ptr;
     int N = 4; // have N declared objects
-    // colors to choose from:
-    short int color[10] = {0xF800, 0xFFE0, 0xFBE0, 0x79E0, 0x7E00, 0x7FF0, 0xF81F, 0x7800, 0xFFFF, 0x7BE0};
-    //  xpos    ypos     dx incre   dy incre  color
-    int x_pos[N], y_pos[N], dx[N], dy[N], color_display[N];
-    int fill_x [5] = {0, 64, 128, 192, 256};
-    int fill_y [5] = {0, 48, 96, 144, 192};
+    // board of arrays:
+    int board [5][5];
+    initializeBoard(board);
 
-    int i = 0;
-    for (i = 0; i < N; i++) {
-          dx[i] = rand() %2 *2 - 1; // set to 1 or -1
-          dy[i] = rand() %2 *2 - 1; // set to 1  or -1
-          color_display[i] = color[rand()%10]; // array of 10 colors
-          x_pos[i] = rand() % 319; // set to a random x coordinate
-          y_pos[i] = rand() % 239; // set to a random y coordinate
-    }
+    // colors to choose from:
+    //short int color[7] = {RED_U16, GREEN_U16, BLUE_U16, YELLOW_U16, ORANGE_U16, BLACK_U16, WHITE_U16};
+    //  xpos    ypos     dx incre   dy incre  color
+    //int x_pos[N], y_pos[N], dx[N], dy[N], color_display[7];
+
+    // we may not need this part of the code.
+    //int fill_x [5] = {0, 64, 128, 192, 256};
+    //int fill_y [5] = {0, 48, 96, 144, 192};
+    // till here
+
+    // int i = 0;
+    // for (i = 0; i < N; i++) {
+    //       dx[i] = rand() %2 *2 - 1; // set to 1 or -1
+    //       dy[i] = rand() %2 *2 - 1; // set to 1  or -1
+    //       //color_display[i] = color[rand()%10]; // array of 10 colors
+    //       x_pos[i] = rand() % 319; // set to a random x coordinate
+    //       y_pos[i] = rand() % 239; // set to a random y coordinate
+    // }
 
     //
     // /* set front pixel buffer to start of FPGA On-chip memory */
@@ -46,45 +105,95 @@ int main(void)
     // /* set back pixel buffer to start of SDRAM memory */
     // *(pixel_ctrl_ptr + 1) = 0xC0000000;
     // pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
+    clear_screen();
+
+    //coloring a square (testing code for now)
+    int row = 0;
+    int col = 0;
+    // this doesn't want to work:
+    for (row = 0; row < ROWS; row++) {
+        for (col = 0; col < COLS; col++) {
+            if (board[row][col] == RED) {
+                printf("value: ");
+                printf("%d", board[row][col]);
+                printf("\n");
+                //fill_color(row, col, RED_U16);
+            }
+
+            if (board[row][col] == GREEN) {
+                printf("value: ");
+                printf("%d", board[row][col]);
+                printf("\n");
+                //fill_color(row, col, GREEN_U16);
+            }
+
+            if (board[row][col] == BLUE) {
+                printf("value: ");
+                printf("%d", board[row][col]);
+                printf("\n");
+                //fill_color(row, col, BLUE_U16);
+            }
+
+            if (board[row][col] == YELLOW) {
+                printf("value: ");
+                printf("%d", board[row][col]);
+                printf("\n");
+                //fill_color(row, col, YELLOW_U16);
+            }
+
+            if (board[row][col] == ORANGE) {
+                printf("value: ");
+                printf("%d", board[row][col]);
+                printf("\n");
+                fill_color(row, col, ORANGE_U16);
+            }
+
+            // printf("value: ");
+            // printf("%d", board[row][col]);
+            // printf("\n");
+        }
+    }
 
     // Background
     // Horizontal Line
-    clear_screen();
-    draw_line(64, 64, 0, 239, 0xFFFF);
-    draw_line(128, 128, 0, 239, 0xFFFF);
-    draw_line(192, 192, 0, 239, 0xFFFF);
-    draw_line(256, 256, 0, 239, 0xFFFF);
+    draw_line(64, 64, 0, 239, WHITE_U16);
+    draw_line(128, 128, 0, 239, WHITE_U16);
+    draw_line(192, 192, 0, 239, WHITE_U16);
+    draw_line(256, 256, 0, 239, WHITE_U16);
     //Vertical Line
-    draw_line(0, 319, 48, 48, 0xFFFF);
-    draw_line(0, 319, 96, 96, 0xFFFF);
-    draw_line(0, 319, 144, 144, 0xFFFF);
-    draw_line(0, 319, 192, 192, 0xFFFF);
+    draw_line(0, 319, 48, 48, WHITE_U16);
+    draw_line(0, 319, 96, 96, WHITE_U16);
+    draw_line(0, 319, 144, 144, WHITE_U16);
+    draw_line(0, 319, 192, 192, WHITE_U16);
 
-    //coloring a square (testing code for now)
-    fill_color(fill_x, fill_y, color_display);
+    //fill_color(fill_x, fill_y, color_display);
     //plotting squares
     return 0;
 }
 
+void plot_pixel(int x, int y, short int line_color)
+{
+    *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
+}
+
 // code not shown for clear_screen() and draw_line() subroutines
-void fill_color(int fill_x[], int fill_y[], int color_display[]) {
+void fill_color(int x, int y, short int color) {
 
-    int rand_x = 0;
-    int rand_y = 0;
-    int rand_color = 0;
+    int xpos =  x;
+    int ypos =  y;
 
-    int i, j, k;
-    for (i = 0; i < 3; i++) {
-        rand_x = rand()%5;
-        rand_y = rand()%5;
-        rand_color = rand()%10;
+    printf("position (x,y): ");
+    printf("%d", xpos);
+    printf("%d", ypos);
+    printf("\n");
 
-        for (j = 1; j < 64; j++) {
-            for (k = 1; k < 48; k++) {
-                plot_pixel(fill_x[rand_x] + j, fill_y[rand_y] + k, color_display[rand_color]);
-            }
-        }
-    }
+
+    // commented it out for now.. .
+    // for (xpos = x * 64; xpos < 64; xpos++) {
+    //     for (ypos = y * 48; ypos < 48; ypos++) {
+    //         plot_pixel(xpos, ypos, color);
+    //     }
+    // }
 
 }
 
@@ -115,11 +224,6 @@ void clear_screen () {
             plot_pixel(x, y, 0x0000);
         }
     }
-}
-
-void plot_pixel(int x, int y, short int line_color)
-{
-    *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
 }
 
 void swap (int* a, int* b) {
@@ -157,7 +261,7 @@ void draw_line(int x0, int x1, int y0, int y1, short int line_color)
     }
 
     int x = x0;
-    for (x; x < x1 + 1; x++) {
+    for (x = x0; x < x1 + 1; x++) {
         if (is_steep) {
             plot_pixel(y, x, line_color);
         } else {

@@ -117,35 +117,50 @@ int main(void)
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
-                //fill_color(row, col, RED_U16);
+                printf("board position: \n");
+                printf("%d ", row);
+                printf("%d \n", col);
+                fill_color(row, col, RED_U16);
             }
 
-            if (board[row][col] == GREEN) {
+            else if (board[row][col] == GREEN) {
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
-                //fill_color(row, col, GREEN_U16);
+                printf("board position: \n");
+                printf("%d ", row);
+                printf("%d \n", col);
+                fill_color(row, col, GREEN_U16);
             }
 
-            if (board[row][col] == BLUE) {
+            else if (board[row][col] == BLUE) {
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
+                printf("board position: \n");
+                printf("%d ", row);
+                printf("%d \n", col);
                 fill_color(row, col, BLUE_U16);
             }
 
-            if (board[row][col] == YELLOW) {
+            else if (board[row][col] == YELLOW) {
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
-                //fill_color(row, col, YELLOW_U16);
+                printf("board position: \n");
+                printf("%d ", row);
+                printf("%d \n", col);
+                fill_color(row, col, YELLOW_U16);
             }
 
-            if (board[row][col] == ORANGE) {
+            else if (board[row][col] == ORANGE) {
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
-                //fill_color(row, col, ORANGE_U16);
+                printf("board position: \n");
+                printf("%d ", row);
+                printf("%d \n", col);
+                fill_color(row, col, ORANGE_U16);
             }
 
             // printf("value: ");
@@ -178,38 +193,21 @@ void plot_pixel(int x, int y, short int line_color)
 
 // code not shown for clear_screen() and draw_line() subroutines
 void fill_color(int x, int y, short int color) {
+//printf("position (x,y): " );
+     int xpos =  x * 64;
+     int ypos =  x * 48;
 
-    int xpos = 0;
-    int ypos = 0;
-
-    // lmao because multiplication doesnt work:
-    int i = 0;
-    int j = 0;
-    for (i = 0; i < x; i++) {
-        for (j = 0; j < 64; j++) {
-            xpos = xpos + 1;
-        }
-    }
-
-    int k = 0;
-    int l = 0;
-    for (k = 0; k < y; k++) {
-        for (l = 0; l < 48; l++) {
-            xpos = xpos + 1;
-        }
-    }
-
-    printf("position (x,y): ");
-    // printf("%d", xpos);
-    // printf("%d", ypos);
-    //printf("\n");
-
-    // srawX and drawY will be your starting position on the board
-    int drawX = xpos;
-    int drawY = ypos;
-    for (drawX = xpos; drawX < (drawX + 64); drawX++) {
-        for (drawY = ypos; drawY < (drawY + 48); drawY++) {
-            plot_pixel(drawX, drawY, color);
+    // //printf("position (x,y): ");
+     // printf("%d", xpos);
+    //  //printf("%d", ypos);
+    // //printf("\n");
+    //
+    int tempX = xpos;
+    int tempY = ypos;
+    //
+    for (xpos = x * 64; xpos < (tempX + 64); xpos++) {
+        for (ypos = x * 48; ypos < (tempY + 48); ypos++) {
+            plot_pixel(xpos, ypos, color);
         }
     }
 

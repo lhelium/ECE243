@@ -131,7 +131,7 @@ int main(void)
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
-                //fill_color(row, col, BLUE_U16);
+                fill_color(row, col, BLUE_U16);
             }
 
             if (board[row][col] == YELLOW) {
@@ -145,7 +145,7 @@ int main(void)
                 printf("value: ");
                 printf("%d", board[row][col]);
                 printf("\n");
-                fill_color(row, col, ORANGE_U16);
+                //fill_color(row, col, ORANGE_U16);
             }
 
             // printf("value: ");
@@ -179,21 +179,39 @@ void plot_pixel(int x, int y, short int line_color)
 // code not shown for clear_screen() and draw_line() subroutines
 void fill_color(int x, int y, short int color) {
 
-    int xpos =  x;
-    int ypos =  y;
+    int xpos = 0;
+    int ypos = 0;
+
+    // lmao because multiplication doesnt work:
+    int i = 0;
+    int j = 0;
+    for (i = 0; i < x; i++) {
+        for (j = 0; j < 64; j++) {
+            xpos = xpos + 1;
+        }
+    }
+
+    int k = 0;
+    int l = 0;
+    for (k = 0; k < y; k++) {
+        for (l = 0; l < 48; l++) {
+            xpos = xpos + 1;
+        }
+    }
 
     printf("position (x,y): ");
-    printf("%d", xpos);
-    printf("%d", ypos);
-    printf("\n");
+    // printf("%d", xpos);
+    // printf("%d", ypos);
+    //printf("\n");
 
-
-    // commented it out for now.. .
-    // for (xpos = x * 64; xpos < 64; xpos++) {
-    //     for (ypos = y * 48; ypos < 48; ypos++) {
-    //         plot_pixel(xpos, ypos, color);
-    //     }
-    // }
+    // srawX and drawY will be your starting position on the board
+    int drawX = xpos;
+    int drawY = ypos;
+    for (drawX = xpos; drawX < (drawX + 64); drawX++) {
+        for (drawY = ypos; drawY < (drawY + 48); drawY++) {
+            plot_pixel(drawX, drawY, color);
+        }
+    }
 
 }
 

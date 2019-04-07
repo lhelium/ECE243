@@ -12,69 +12,17 @@
 * 3. provides code that initializes the generic interrupt controller
 */
 
-// Define the IRQ exception handler
-void __attribute__ ((interrupt)) __cs3_isr_irq () {
-	int interrupt_ID = *((int *) 0xFFFEC10C); //Read the ICCIAR from the CPU Interface in the GIC
-	if (interrupt_ID == 79) // check if interrupt is from the PS/2
-		PS2_ISR ();
-	else
-		while (1); // if unexpected, then stay here
-	
-	// Write to the End of Interrupt Register (ICCEOIR)
-	*((int *) 0xFFFEC110) = interrupt_ID;
-}
+char keyPressed;
 
-// Define the remaining exception handlers
-void __attribute__ ((interrupt)) __cs3_reset () {
-	while(1);
-}
-
-void __attribute__ ((interrupt)) __cs3_isr_undef () {
-	while(1);
-}
-
-void __attribute__ ((interrupt)) __cs3_isr_swi () { 
-	while(1);
-}
-
-void __attribute__ ((interrupt)) __cs3_isr_pabort () {
-	while(1);
-}
-
-void __attribute__ ((interrupt)) __cs3_isr_dabort () {
-	while(1);
-}
-
-void __attribute__ ((interrupt)) __cs3_isr_fiq () {
-	while(1);
+/*Turn on interrupts in the ARM processor*/
+void enable_A9_interrupts() {
+	int status = 0b01010011;
+	asm("msr cpsr, %[ps]" : : [ps]"r"(status));
 }
 
 /*Turn off interrupts in the ARM processor*/
 void disable_A9_interrupts() {
 	int status = 0b11010011;
-	asm("msr cpsr, %[ps]" : : [ps]"r"(status));
-}
-
-/* Initialize the banked stack pointer register for IRQ mode*/
-void set_A9_IRQ_stack() {
-	int stack, mode;
-	stack = 0xFFFFFFFF - 7; // top of A9 onchip memory, aligned to 8 bytes
-	
-	/* change processor to IRQ mode with interrupts disabled */
-	mode = 0b11010010;
-	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
-	
-	/* set banked stack pointer */
-	asm("mov sp, %[ps]" : : [ps] "r" (stack));
-	
-	/* go back to SVC mode before executing subroutine return! */
-	mode = 0b11010011;
-	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
-}
-
-/*Turn on interrupts in the ARM processor*/
-void enable_A9_interrupts() {
-	int status = 0b01010011;
 	asm("msr cpsr, %[ps]" : : [ps]"r"(status));
 }
 
@@ -121,46 +69,105 @@ void config_interrupt (int N, int CPU_target) {
 /* setup the PS2 interrupts in the FPGA */
 void config_PS2s() {
 	volatile int* PS2_ptr = (int*)0xFF200100; // PS2 base address
-	volatile int* PS2_ptr_interrupt = (int*)0xFF200104
+	volatile int* PS2_ptr_interrupt = (int*)0xFF200104;
 	*(PS2_ptr_interrupt) = 0x1; // enable interrupts for PS/2 by writing 1 to RE field at address 0xFF200104
 }
 
 
 void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D or other, and display on HEX
+	//clear the interrupt
+	volatile int* PS2_ptr_interrupt = (int*)0xFF200104;
+	*(PS2_ptr_interrupt) = 0b100000001;
+	
 	/* PS2 base address */
 	volatile int *PS2_ptr = (int *) 0xFF200100;
 	
 	//HEX display base address
-	volatile int *HEX3_HEX0_ptr = (int *) 0xFF200020;
+	volatile int *RLEDs = (int *) 0xFF200000;
 	
-	int PS2_data, RVALID, letter, HEX1_bits, HEX0_bits, HEX_code;
-	const char W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
+	int PS2_data, RVALID, letter, LED;
+	//const int W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
 	
 	PS2_data = *(PS2_ptr);
 	RVALID = PS2_data & 0x8000;
 	if(RVALID) {
-		letter = RVALID & 0xFF;
-		if(letter == W) { //display W on HEX1 and 0
-			HEX1_bits = 0b00111100;
-			HEX0_bits = 0b00001110;
-		} else if(letter == A) { //display A on HEX0
-			HEX1_bits = 0b00000000;
-			HEX0_bits = 0b01110111; //HEX code for A
-		} else if(letter == S) { //display S on HEX0
-			HEX1_bits = 0b00000000;
-			HEX0_bits = 0b01101101; //HEX code for S
-		} else if(letter == D) { //display D on HEX0
-			HEX1_bits = 0b00000000;
-			HEX0_bits = 0b01011110;
-		} else { //blank the display
-			HEX1_bits = 0b00000000; 
-			HEX0_bits = 0b00000000;
+		letter = PS2_data & 0xFF;
+		if(letter == 0x1D) {
+			LED = 0x1D;
+			keyPressed = 'W';
+		} else if(letter == 0x1C) {
+			LED = 0x1C;
+			keyPressed = 'A';
+		} else if(letter == 0x1B) {
+			LED = 0x1B;
+			keyPressed = 'S';
+		} else if(letter == 0x23) {
+			LED = 0x23;
+			keyPressed = 'D';
+		} else {
+			LED = 0;
+			keyPressed = 'Z';
 		}
 	}
 	
-	HEX_code = HEX1_bits | HEX0_bits; //OR HEX1 and HEX0 bits together to create 1 bit code to display on HEX1-0
-	*HEX3_HEX0_ptr = HEX_code; //display the letter on the HEX
+	*RLEDs = LED; //display the letter on the HEX
+	
+	printf("%c\n", keyPressed);
 	return;
+}
+
+// Define the IRQ exception handler
+void __attribute__ ((interrupt)) __cs3_isr_irq () {
+	int interrupt_ID = *((int *) 0xFFFEC10C); //Read the ICCIAR from the CPU Interface in the GIC
+	if (interrupt_ID == 79) // check if interrupt is from the PS/2
+		PS2_ISR();
+	else
+		while (1); // if unexpected, then stay here
+	
+	// Write to the End of Interrupt Register (ICCEOIR)
+	*((int *) 0xFFFEC110) = interrupt_ID;
+}
+
+// Define the remaining exception handlers
+void __attribute__ ((interrupt)) __cs3_reset () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_undef () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_swi () { 
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_pabort () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_dabort () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_fiq () {
+	while(1);
+}
+
+/* Initialize the banked stack pointer register for IRQ mode*/
+void set_A9_IRQ_stack() {
+	int stack, mode;
+	stack = 0xFFFFFFFF - 7; // top of A9 onchip memory, aligned to 8 bytes
+	
+	/* change processor to IRQ mode with interrupts disabled */
+	mode = 0b11010010;
+	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
+	
+	/* set banked stack pointer */
+	asm("mov sp, %[ps]" : : [ps] "r" (stack));
+	
+	/* go back to SVC mode before executing subroutine return! */
+	mode = 0b11010011;
+	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 }
 
 

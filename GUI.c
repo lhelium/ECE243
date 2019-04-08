@@ -3,6 +3,7 @@ volatile int pixel_buffer_start; // global variable
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "configGIC.h" // comment this out for CPULATOR
 
 #define ROWS 5
 #define COLS 5
@@ -25,13 +26,40 @@ volatile int pixel_buffer_start; // global variable
 
 
 
+// graphical functions
 void clear_screen();
 void wait_for_vsync();
 void plot_pixel(int x, int y, short int line_color);
-void draw_line(int x0, int x1, int y0, int y1, short int line_color);
+void draw_line(int x0, int x1, int y0, int y1, short int color);
 void swap(int* a, int*b); // you gotta use pointers
 void fill_color(int x, int y, short int color);
 void initializeBoard (int board[][COLS]);
+void animate_line(int boardX, int boardY, int direction, short int line_color);
+
+int xpos_global, ypos_global;
+short int color_global;
+
+// Interrupts
+char keyPressed;
+int color_select;
+int numPressedW;
+int numPressedA;
+int numPressedS;
+int numPressedD;
+void enable_A9_interrupts();
+void disable_A9_interrupts();
+void config_GIC();
+void config_interrupt (int N, int CPU_target);
+void config_PS2s();
+void PS2_ISR();
+void __attribute__ ((interrupt)) __cs3_isr_irq ();
+void __attribute__ ((interrupt)) __cs3_reset ();
+void __attribute__ ((interrupt)) __cs3_isr_undef ();
+void __attribute__ ((interrupt)) __cs3_isr_swi ();
+void __attribute__ ((interrupt)) __cs3_isr_pabort ();
+void __attribute__ ((interrupt)) __cs3_isr_dabort ();
+void __attribute__ ((interrupt)) __cs3_isr_fiq ();
+void set_A9_IRQ_stack();
 
 void initializeBoard (int board[][COLS]) {
 // 1 for red, 2 for green, 3 for blue, 4 for yellow, 5 for orange
@@ -67,7 +95,7 @@ int main(void)
 {
     volatile int * pixel_ctrl_ptr = (int *)0xFF203020; // pixel buffer address.
     /* Read location of the pixel buffer from the pixel buffer controller */
-    pixel_buffer_start = *pixel_ctrl_ptr;
+    //pixel_buffer_start = *pixel_ctrl_ptr;
     int N = 4; // have N declared objects
     // board of arrays:
     int board [5][5];
@@ -93,78 +121,81 @@ int main(void)
     // }
 
     //
-    // /* set front pixel buffer to start of FPGA On-chip memory */
-    // *(pixel_ctrl_ptr + 1) = 0xC8000000; // first store the address in the
-    //                                     // back buffer
-    // /* now, swap the front/back buffers, to set the front buffer location */
-    // wait_for_vsync();
-    // /* initialize a pointer to the pixel buffer, used by drawing functions */
-    // pixel_buffer_start = *pixel_ctrl_ptr;
-    // clear_screen(); // pixel_buffer_start points to the pixel buffer
-    //
-    // /* set back pixel buffer to start of SDRAM memory */
-    // *(pixel_ctrl_ptr + 1) = 0xC0000000;
-    // pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
-    clear_screen();
 
+    /* set front pixel buffer to start of FPGA On-chip memory */
+    *(pixel_ctrl_ptr + 1) = 0xC8000000; // first store the address in the
+                                        // back buffer
+    /* now, swap the front/back buffers, to set the front buffer location */
+    wait_for_vsync();
+    /* initialize a pointer to the pixel buffer, used by drawing functions */
+    pixel_buffer_start = *pixel_ctrl_ptr;
+    clear_screen(); // pixel_buffer_start points to the pixel buffer
+
+    /* set back pixel buffer to start of SDRAM memory */
+    *(pixel_ctrl_ptr + 1) = 0xC0000000;
+    pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
+    //clear_screen();
     //coloring a square (testing code for now)
+
+    while (1) {
+    clear_screen();
     int row = 0;
     int col = 0;
     //this doesn't want to work:
     for (row = 0; row < ROWS; row++) {
         for (col = 0; col < COLS; col++) {
             if (board[row][col] == RED) {
-                printf("Color: Red \n");
-                printf("value: ");
-                printf("%d", board[row][col]);
-                printf("\n");
-                printf("board position: \n");
-                printf("%d ", row);
-                printf("%d \n", col);
+                // printf("Color: Red \n");
+                // printf("value: ");
+                // printf("%d", board[row][col]);
+                // printf("\n");
+                // printf("board position: \n");
+                // printf("%d ", row);
+                // printf("%d \n", col);
                 fill_color(row, col, RED_U16);
             }
 
             else if (board[row][col] == GREEN) {
-                printf("Color: Green \n");
-                printf("value: ");
-                printf("%d", board[row][col]);
-                printf("\n");
-                printf("board position: \n");
-                printf("%d ", row);
-                printf("%d \n", col);
+                // printf("Color: Green \n");
+                // printf("value: ");
+                // printf("%d", board[row][col]);
+                // printf("\n");
+                // printf("board position: \n");
+                // printf("%d ", row);
+                // printf("%d \n", col);
                 fill_color(row, col, GREEN_U16);
             }
 
             else if (board[row][col] == BLUE) {
-                printf("Color: Blue \n");
-                printf("value: ");
-                printf("%d", board[row][col]);
-                printf("\n");
-                printf("board position: \n");
-                printf("%d ", row);
-                printf("%d \n", col);
+                // printf("Color: Blue \n");
+                // printf("value: ");
+                // printf("%d", board[row][col]);
+                // printf("\n");
+                // printf("board position: \n");
+                // printf("%d ", row);
+                // printf("%d \n", col);
                 fill_color(row, col, BLUE_U16);
             }
 
             else if (board[row][col] == YELLOW) {
-                printf("Color: Yellow \n");
-                printf("value: ");
-                printf("%d", board[row][col]);
-                printf("\n");
-                printf("board position: \n");
-                printf("%d ", row);
-                printf("%d \n", col);
+                // printf("Color: Yellow \n");
+                // printf("value: ");
+                // printf("%d", board[row][col]);
+                // printf("\n");
+                // printf("board position: \n");
+                // printf("%d ", row);
+                // printf("%d \n", col);
                 fill_color(row, col, YELLOW_U16);
             }
 
             else if (board[row][col] == ORANGE) {
-                printf("Color: Orange \n");
-                printf("value: ");
-                printf("%d", board[row][col]);
-                printf("\n");
-                printf("board position: \n");
-                printf("%d ", row);
-                printf("%d \n", col);
+                // printf("Color: Orange \n");
+                // printf("value: ");
+                // printf("%d", board[row][col]);
+                // printf("\n");
+                // printf("board position: \n");
+                // printf("%d ", row);
+                // printf("%d \n", col);
                 fill_color(row, col, ORANGE_U16);
             }
 
@@ -172,25 +203,71 @@ int main(void)
             // printf("%d", board[row][col]);
             // printf("\n");
         }
+     }
+        //fill_color(0, 2, GREEN_U16);
+
+        // Background
+        // Horizontal Line
+        draw_line(64, 64, 0, 239, WHITE_U16);
+        draw_line(128, 128, 0, 239, WHITE_U16);
+        draw_line(192, 192, 0, 239, WHITE_U16);
+        draw_line(256, 256, 0, 239, WHITE_U16);
+        //Vertical Line
+        draw_line(0, 319, 48, 48, WHITE_U16);
+        draw_line(0, 319, 96, 96, WHITE_U16);
+        draw_line(0, 319, 144, 144, WHITE_U16);
+        draw_line(0, 319, 192, 192, WHITE_U16);
+
+        // first select the color
+        if (color_select == RED) {
+            //animate(1, 4, RED_U16);
+        }
+
+        else if (color_select == GREEN) {
+            //animate();
+        }
+
+        else if (color_select == BLUE) {
+            //animate();
+        }
+
+        else if (color_select == YELLOW) {
+            //animate();
+        }
+
+        else if (color_select == ORANGE) {
+            //animate();
+        }
+
+       wait_for_vsync(); // swap front and back buffers on VGA vertical sync
+       pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
     }
 
-    //fill_color(0, 2, GREEN_U16);
 
-    // Background
-    // Horizontal Line
-    draw_line(64, 64, 0, 239, WHITE_U16);
-    draw_line(128, 128, 0, 239, WHITE_U16);
-    draw_line(192, 192, 0, 239, WHITE_U16);
-    draw_line(256, 256, 0, 239, WHITE_U16);
-    //Vertical Line
-    draw_line(0, 319, 48, 48, WHITE_U16);
-    draw_line(0, 319, 96, 96, WHITE_U16);
-    draw_line(0, 319, 144, 144, WHITE_U16);
-    draw_line(0, 319, 192, 192, WHITE_U16);
-
-    //fill_color(fill_x, fill_y, color_display);
-    //plotting squares
     return 0;
+}
+
+// x and y are BOARD coordinates.
+void animate (int x, int y, short int color) {
+    // add interrupt code here
+    int direction = 0;
+    if (keyPressed == 'W') {
+        direction = 1;
+        animate_line(x, y, direction, color);
+    }
+    else if (keyPressed == 'A') {
+        direction = 2;
+        animate_line(x, y, direction, color);
+    }
+    else if (keyPressed == 'S') {
+        direction = 3;
+        animate_line(x, y, direction, color);
+    }
+    else if (keyPressed == 'D') {
+        direction = 4;
+        animate_line(x, y, direction, color);
+    }
+
 }
 
 void plot_pixel(int x, int y, short int line_color)
@@ -199,6 +276,88 @@ void plot_pixel(int x, int y, short int line_color)
 }
 
 // code not shown for clear_screen() and draw_line() subroutines
+// takes in argument for the box position on the board, the WASD direction and the U16 color.
+void animate_line(int boardX, int boardY, int direction, short int line_color) {
+
+    //convert board position onto x,y coordinates on the screen
+    int startX = boardX * 64;
+    int startY = boardY * 48;
+
+    int endXRIGHT = startX + 64;
+    int endYUP = startY + 48;
+    int endXLEFT = startX - 64;
+    int endYDOWN = startY - 48;
+
+    int x0 = 0;
+    int x1 = 0;
+    int y0 = 0;
+    int y1 = 0;
+
+    // W UPWARDS
+    if (direction == 1) {
+        x0 = startX;
+        x1 = endXRIGHT;
+        y0 = startY;
+        y1 = y0;
+        for (startY = boardY * 48; startY < endYUP; startY++) {
+            // Horizontal Line
+            y0 += direction;
+            y1 += y0;
+            draw_line(x0, y0, x1, y1, line_color);
+            wait_for_vsync();
+            draw_line(x0, y0, x1, y1, 0x0000);
+        }
+        fill_color(boardX, boardY, line_color);
+    }
+    // A LEFT
+    else if (direction == 2) {
+        x0 = startX;
+        x1 = x0;
+        y0 = startY;
+        y1 = endYUP; // needsd checking
+        for (startX = boardX * 64; startX > endXLEFT; startX--) {
+            x0 -= direction;
+            x1 -= x0;
+            draw_line(x0, y0, x1, y1, line_color);
+            wait_for_vsync();
+            draw_line(x0, y0, x1, y1, 0x0000);
+        }
+        fill_color(boardX, boardY, line_color);
+    }
+    // S DOWNWARDS
+    else if (direction == 3) {
+        x0 = startX;
+        x1 = endXRIGHT;
+        y0 = startY;
+        y1 = y0;
+        for (startY = boardY * 48; startY > endYDOWN; startY--) {
+            y0 -= direction;
+            y1 -= y0;
+            draw_line(x0, y0, x1, y1, line_color);
+            wait_for_vsync();
+            draw_line(x0, y0, x1, y1, 0x0000);
+        }
+        fill_color(boardX, boardY, line_color);
+    }
+    // D RIGHTWARDS
+    else if (direction == 4) {
+        x0 = startX;
+        x1 = x0;
+        y0 = startY;
+        y1 = endYUP; // needsd checking
+        for (startX = boardX * 64; startX < endXRIGHT; startX++) {
+            x0 += direction;
+            x1 += x0;
+            draw_line(x0, y0, x1, y1, line_color);
+            wait_for_vsync();
+            draw_line(x0, y0, x1, y1, 0x0000);
+        }
+        fill_color(boardX, boardY, line_color);
+    }
+
+}
+
+
 void fill_color(int x, int y, short int color) {
 //printf("position (x,y): " );
      int xpos =  x * 64;
@@ -298,4 +457,180 @@ void draw_line(int x0, int x1, int y0, int y1, short int line_color)
             error = error - deltax;
         }
     }
+}
+
+// CODE BELOW ARE INTERUPT RELATED:
+/*Turn on interrupts in the ARM processor*/
+void enable_A9_interrupts() {
+	int status = 0b01010011;
+	asm("msr cpsr, %[ps]" : : [ps]"r"(status));
+}
+
+/*Turn off interrupts in the ARM processor*/
+void disable_A9_interrupts() {
+	int status = 0b11010011;
+	asm("msr cpsr, %[ps]" : : [ps]"r"(status));
+}
+
+/* Configure the Generic Interrupt Controller (GIC)*/
+void config_GIC() {
+	config_interrupt(79, 1); //configure the PS2 keyboard parallel port
+
+	// Set Interrupt Priority Mask Register (ICCPMR). Enable interrupts of all priorities
+	*((int *) 0xFFFEC104) = 0xFFFF;
+
+	// Set CPU Interface Control Register (ICCICR). Enable signaling of interrupts
+	*((int *) 0xFFFEC100) = 1;
+
+	// Configure the Distributor Control Register (ICDDCR) to send pending interrupts to CPUs
+	*((int *) 0xFFFED000) = 1;
+}
+
+/* Configure Set Enable Registers (ICDISERn) and Interrupt Processor Target Registers (ICDIPTRn). The default (reset) values are used for other registers in the GIC.*/
+void config_interrupt (int N, int CPU_target) {
+	int reg_offset, index, value, address;
+
+	/* Configure the Interrupt Set-Enable Registers (ICDISERn).
+	* reg_offset = (integer_div(N / 32) * 4
+	* value = 1 << (N mod 32) */
+	reg_offset = (N >> 3) & 0xFFFFFFFC;
+	index = N & 0x1F;
+	value = 0x1 << index;
+	address = 0xFFFED100 + reg_offset;
+
+	/* Now that we know the register address and value, set the appropriate bit */
+	*(int *)address |= value;
+
+	/* Configure the Interrupt Processor Targets Register (ICDIPTRn)
+	* reg_offset = integer_div(N / 4) * 4
+	* index = N mod 4 */
+	reg_offset = (N & 0xFFFFFFFC);
+	index = N & 0x3;
+	address = 0xFFFED800 + reg_offset + index;
+
+	/* Now that we know the register address and value, write to (only) the appropriate byte */
+	*(char *)address = (char) CPU_target;
+}
+
+/* setup the PS2 interrupts in the FPGA */
+void config_PS2s() {
+	volatile int* PS2_ptr = (int*)0xFF200100; // PS2 base address
+	volatile int* PS2_ptr_interrupt = (int*)0xFF200104;
+	*(PS2_ptr_interrupt) = 0x1; // enable interrupts for PS/2 by writing 1 to RE field at address 0xFF200104
+}
+
+// use global variables.
+void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D or other, and display on HEX
+	//clear the interrupt
+	volatile int* PS2_ptr_interrupt = (int*)0xFF200104;
+	*(PS2_ptr_interrupt) = 0b100000001;
+
+	/* PS2 base address */
+	volatile int *PS2_ptr = (int *) 0xFF200100;
+
+	//HEX display base address
+	volatile int *RLEDs = (int *) 0xFF200000;
+
+	int PS2_data, RVALID, letter, LED;
+	//const int W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
+
+	PS2_data = *(PS2_ptr);
+	RVALID = PS2_data & 0x8000;
+	if(RVALID) {
+		letter = PS2_data & 0xFF;
+		if(letter == 0x1D) {
+			LED = 0x1D;
+			keyPressed = 'W';
+            numPressedW++; // still need to reset this later. I dont remeber if I need it or not...
+		} else if(letter == 0x1C) {
+			LED = 0x1C;
+			keyPressed = 'A';
+            numPressedA++;
+		} else if(letter == 0x1B) {
+			LED = 0x1B;
+			keyPressed = 'S';
+            numPressedS++;
+		} else if(letter == 0x23) {
+			LED = 0x23;
+			keyPressed = 'D';
+            numPressedD++;
+		} else if (letter == 0x16) {
+            // "1"
+            color_select = RED;
+        } else if (letter == 0x1E) {
+            // "2"
+            color_select = GREEN;
+        } else if (letter == 0x26) {
+            // "3"
+            color_select = BLUE;
+        } else if (letter == 25) {
+            // "4"
+            color_select = YELLOW;
+        } else if (letter == 0x2E) {
+            // "5"
+            color_select = ORANGE;
+        } else {
+			LED = 0;
+			keyPressed = 'Z';
+		}
+	}
+
+	*RLEDs = LED; //display the letter on the HEX
+
+	printf("%c\n", keyPressed);
+	return;
+}
+
+// Define the IRQ exception handler
+void __attribute__ ((interrupt)) __cs3_isr_irq () {
+	int interrupt_ID = *((int *) 0xFFFEC10C); //Read the ICCIAR from the CPU Interface in the GIC
+	if (interrupt_ID == 79) // check if interrupt is from the PS/2
+		PS2_ISR();
+	else
+		while (1); // if unexpected, then stay here
+
+	// Write to the End of Interrupt Register (ICCEOIR)
+	*((int *) 0xFFFEC110) = interrupt_ID;
+}
+
+// Define the remaining exception handlers
+void __attribute__ ((interrupt)) __cs3_reset () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_undef () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_swi () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_pabort () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_dabort () {
+	while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_fiq () {
+	while(1);
+}
+
+/* Initialize the banked stack pointer register for IRQ mode*/
+void set_A9_IRQ_stack() {
+	int stack, mode;
+	stack = 0xFFFFFFFF - 7; // top of A9 onchip memory, aligned to 8 bytes
+
+	/* change processor to IRQ mode with interrupts disabled */
+	mode = 0b11010010;
+	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
+
+	/* set banked stack pointer */
+	asm("mov sp, %[ps]" : : [ps] "r" (stack));
+
+	/* go back to SVC mode before executing subroutine return! */
+	mode = 0b11010011;
+	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 }

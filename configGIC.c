@@ -13,6 +13,7 @@
 */
 
 char keyPressed;
+char color;
 
 /*Turn on interrupts in the ARM processor*/
 void enable_A9_interrupts() {
@@ -85,28 +86,50 @@ void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D o
 	//HEX display base address
 	volatile int *RLEDs = (int *) 0xFF200000;
 	
-	int PS2_data, RVALID, letter, LED;
+	int PS2_data, RVALID, data, LED;
 	//const int W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
 	
 	PS2_data = *(PS2_ptr);
 	RVALID = PS2_data & 0x8000;
 	if(RVALID) {
-		letter = PS2_data & 0xFF;
-		if(letter == 0x1D) {
+		data = PS2_data & 0xFF;
+		
+		//determine the direction of movement (W/A/S/D)
+		if(data == 0x1D) {
 			LED = 0x1D;
 			keyPressed = 'W';
-		} else if(letter == 0x1C) {
+		} else if(data == 0x1C) {
 			LED = 0x1C;
 			keyPressed = 'A';
-		} else if(letter == 0x1B) {
+		} else if(data == 0x1B) {
 			LED = 0x1B;
 			keyPressed = 'S';
-		} else if(letter == 0x23) {
+		} else if(data == 0x23) {
 			LED = 0x23;
 			keyPressed = 'D';
+			
+		//determine the color to move (R/G/B/Y/O)
+		} else if(data == 0x16) {
+			LED = 0x16;
+			color = 'R';
+		} else if(data == 0x1E) {
+			LED = 0x1E;
+			color = 'G';
+		} else if(data == 0x26) {
+			LED = 0x26;
+			color = 'B';
+		} else if(data == 0x25) {
+			LED = 0x25;
+			color = 'Y';
+		} else if(data == 0x2E) {
+			LED = 0x2E;
+			color = 'O';
+		
+		//error handling
 		} else {
 			LED = 0;
 			keyPressed = 'Z';
+			color = 'B';
 		}
 	}
 	

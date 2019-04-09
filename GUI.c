@@ -35,6 +35,7 @@ void swap(int* a, int*b); // you gotta use pointers
 void fill_color(int x, int y, short int color);
 void initializeBoard (int board[][COLS]);
 void animate_line(int boardX, int boardY, int direction, short int line_color);
+void animate (int x, int y, short int color);
 
 int xpos_global, ypos_global;
 short int color_global;
@@ -141,6 +142,7 @@ int main(void)
     clear_screen();
     int row = 0;
     int col = 0;
+    //printf("okokokk");
     //this doesn't want to work:
     for (row = 0; row < ROWS; row++) {
         for (col = 0; col < COLS; col++) {
@@ -220,23 +222,24 @@ int main(void)
 
         // first select the color
         if (color_select == RED) {
-            //animate(1, 4, RED_U16);
+            draw_line(3, 44, 150, 209, WHITE_U16);
+            animate(1, 4, RED_U16);
         }
 
         else if (color_select == GREEN) {
-            //animate();
+            animate(2, 0, GREEN_U16);
         }
 
         else if (color_select == BLUE) {
-            //animate();
+            animate(2, 1, BLUE_U16);
         }
 
         else if (color_select == YELLOW) {
-            //animate();
+            animate(4, 0, YELLOW_U16);
         }
 
         else if (color_select == ORANGE) {
-            //animate();
+            animate(4, 1, ORANGE_U16);
         }
 
        wait_for_vsync(); // swap front and back buffers on VGA vertical sync
@@ -251,18 +254,25 @@ int main(void)
 void animate (int x, int y, short int color) {
     // add interrupt code here
     int direction = 0;
+    printf("ok");
+    // up
     if (keyPressed == 'W') {
         direction = 1;
+        printf("yo fam");
+        printf("\n");
         animate_line(x, y, direction, color);
     }
+    // left
     else if (keyPressed == 'A') {
         direction = 2;
         animate_line(x, y, direction, color);
     }
+    // down
     else if (keyPressed == 'S') {
         direction = 3;
         animate_line(x, y, direction, color);
     }
+    // right
     else if (keyPressed == 'D') {
         direction = 4;
         animate_line(x, y, direction, color);
@@ -288,10 +298,10 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
     int endXLEFT = startX - 64;
     int endYDOWN = startY - 48;
 
-    int x0 = 0;
-    int x1 = 0;
-    int y0 = 0;
-    int y1 = 0;
+    int x0 = 0;  // starting x
+    int x1 = 0;  // ending x
+    int y0 = 0;  // starting y
+    int y1 = 0;  // ending y
 
     // W UPWARDS
     if (direction == 1) {
@@ -302,7 +312,7 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
         for (startY = boardY * 48; startY < endYUP; startY++) {
             // Horizontal Line
             y0 += direction;
-            y1 += y0;
+            y1 = y0;
             draw_line(x0, y0, x1, y1, line_color);
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
@@ -317,7 +327,7 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
         y1 = endYUP; // needsd checking
         for (startX = boardX * 64; startX > endXLEFT; startX--) {
             x0 -= direction;
-            x1 -= x0;
+            x1 = x0;
             draw_line(x0, y0, x1, y1, line_color);
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
@@ -332,7 +342,7 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
         y1 = y0;
         for (startY = boardY * 48; startY > endYDOWN; startY--) {
             y0 -= direction;
-            y1 -= y0;
+            y1 = y0;
             draw_line(x0, y0, x1, y1, line_color);
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
@@ -347,14 +357,13 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
         y1 = endYUP; // needsd checking
         for (startX = boardX * 64; startX < endXRIGHT; startX++) {
             x0 += direction;
-            x1 += x0;
+            x1 = x0;
             draw_line(x0, y0, x1, y1, line_color);
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
         }
         fill_color(boardX, boardY, line_color);
     }
-
 }
 
 

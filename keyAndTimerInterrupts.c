@@ -1,43 +1,48 @@
-#include "configGIC.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "address_map_arm.h"
+
+void config_KEYs();
+void KEY_ISR();
+void config_timer();
+void timer_ISR();
 
 volatile bool resetGame = false;
+volatile int timeElapsed = 0;
 volatile bool pressedAgain = false; 
 
-volatile char byte1, byte2, data;
-volatile char keyPressed;
+void config_GIC();
+void config_interrupt (int N, int CPU_target);
 
-//The following code is adapted from Altera's "Using the ARM Generic Interrupt Controller" document:
+void config_KEYs();
+void KEY_ISR (void);
 
-//Interrupt ID for PS2 devices is 79
-//Address of PS2 devices is 0xFF200100
+void config_timer();
+void timer_ISR (void);
 
-/* This file:
-* 1. defines exception vectors for the A9 processor
-* 2. provides code that sets the IRQ mode stack, and that dis/enables
-* interrupts
-* 3. provides code that initializes the generic interrupt controller
-*/
-char color;
+void __attribute__ ((interrupt)) __cs3_isr_irq ();
+void __attribute__ ((interrupt)) __cs3_reset ();
+void __attribute__ ((interrupt)) __cs3_isr_undef ();
+void __attribute__ ((interrupt)) __cs3_isr_swi ();
+void __attribute__ ((interrupt)) __cs3_isr_pabort ();
+void __attribute__ ((interrupt)) __cs3_isr_dabort ();
+void __attribute__ ((interrupt)) __cs3_isr_fiq ();
+void disable_A9_interrupts();
+void set_A9_IRQ_stack();
+void enable_A9_interrupts();
+
+void displayHEX(int num);
 
 int main() {
-	byte1        = 0;
-    byte2        = 0;
-    data         = 0; // used to hold PS/2 data
-    
-    //function calls to enable interrupts in ARM and PS/2 keyboard
+	
+	 //function calls to enable interrupts in ARM and PS/2 keyboard
 	disable_A9_interrupts(); // disable interrupts in the A9 processor
 	set_A9_IRQ_stack(); // initialize the stack pointer for IRQ mode
 	config_GIC(); // configure the general interrupt controller
-	config_PS2s(); // configure PS/2 to generate interrupts
 	config_KEYs(); // configure PS/2 to generate interrupts
-	
+	config_timer();
 	enable_A9_interrupts(); // enable interrupts in the A9 processor
-
-    while(1) {}
 	
-	return 0;
 }
 
 /*Turn on interrupts in the ARM processor*/
@@ -56,6 +61,7 @@ void disable_A9_interrupts() {
 void config_GIC() {
 	config_interrupt(79, 1); //configure the PS2 keyboard parallel port
 	config_interrupt(73, 1); //configure KEY interrupts
+	config_interrupt(72, 1); //configure Private Timer interrupts
 	
 	// Set Interrupt Priority Mask Register (ICCPMR). Enable interrupts of all priorities
 	*((int *) 0xFFFEC104) = 0xFFFF;
@@ -143,109 +149,79 @@ void KEY_ISR() {
 	return;
 }
 
-/* setup the PS2 interrupts in the FPGA */
-void config_PS2s() {
-	volatile int* PS2_ptr = (int*)0xFF200100; // PS2 base address
-	volatile int* PS2_ptr_interrupt = (int*)0xFF200104;
-	*(PS2_ptr_interrupt) = 0x1; // enable interrupts for PS/2 by writing 1 to RE field at address 0xFF200104
+void config_timer() {
+    volatile int * MPcore_private_timer_ptr = (int *)0xFFFEC600; // timer base address
+
+    /* set the timer period */
+    int counter = 200000000; // private timer runs on 200 MHz clock, 200,000,000/200,000,000 = 1 second
+    *(MPcore_private_timer_ptr) = counter; // write to timer load register
+
+    /* write to control register to start timer, with interrupts */
+    *(MPcore_private_timer_ptr + 2) = 0x7; // int mask = 1, mode = 1, enable = 1
 }
 
+void timer_ISR() {
+	timeElapsed++;
+	if(timeElapsed < 9999) {
+		displayHEX(timeElapsed);
+	}
+}
 
-void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D or other, and display on HEX
-	//clear the interrupt
-	volatile int* PS2_ptr_interrupt = (int*)0xFF200104;
-	*(PS2_ptr_interrupt) = 0b100000001;
+void displayHEX(int num) {
+	volatile int* HEX_ptr = (int*) 0xFF200020;
+	int HEX_bits;
+	int allHEXBits = 0;
 	
-	/* PS2 base address */
-	volatile int *PS2_ptr = (int *) 0xFF200100;
-	
-	//HEX display base address
-	volatile int *RLEDs = (int *) 0xFF200000;
-	
-	int PS2_data, RAVAIL, RVALID, data, LED;
-	//const int W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
-	
-	PS2_data = *(PS2_ptr);
-	RAVAIL = (PS2_data & 0xFFFF0000) >> 16;	
-	
-	if(RAVAIL > 0) {
-		byte1 = byte2;
-		byte2 = data;
-		data = PS2_data & 0xFF;
-		
-		//determine the direction of movement (W/A/S/D)
-		
-		//if(byte1 == data) {
-			if(data == 0x1D) {
-				LED = 0x1D;
-				keyPressed = 'W';
-				//printf("W pressed\n");
-			} else if(data == 0x1C) {
-				LED = 0x1C;
-				keyPressed = 'A';
-				//printf("A pressed\n");
-			} else if(data == 0x1B) {
-				LED = 0x1B;
-				keyPressed = 'S';
-				//printf("S pressed\n");
-			} else if(data == 0x23) {
-				LED = 0x23;
-				keyPressed = 'D';
-				//printf("D pressed\n");
-				
-			//determine the color to move (R/G/B/Y/O)
-			} else if(data == 0x16) {
-				LED = 0x16;
-				keyPressed = '1';
-				//color = 'R';
-				//printf("1 pressed\n");
-			} else if(data == 0x1E) {
-				LED = 0x1E;
-				//color = 'G';
-				keyPressed = '2';
-				//printf("2 pressed\n");
-			} else if(data == 0x26) {
-				LED = 0x26;
-				//color = 'B';
-				keyPressed = '3';
-				//printf("3 pressed\n");
-			} else if(data == 0x25) {
-				LED = 0x25;
-				//color = 'Y';
-				keyPressed = '4';
-				//printf("4 pressed\n");
-			} else if(data == 0x2E) {
-				LED = 0x2E;
-				//color = 'O';
-				keyPressed = '5';
-				//printf("5 pressed\n");
-			
-			//error handling
-			} else {
-				LED = 0xFFFF;
-				//printf("unknown key pressed\n");
-				keyPressed = '?';
-				//color = 'B';
-			}
-		//}
-		
+	if(num == 0) {
+		allHEXBits = 0b00111111;
+		*HEX_ptr = allHEXBits;
+		return;
 	}
 	
-	//printf("data: %c\n", data);
-	printf("%c key pressed\n", keyPressed);
-	*RLEDs = LED; //display the hex code on the LEDs
+	while(num > 0) {
+		int numMod = num % 10;
+		num = num / 10;
+		
+		if(numMod == 0) {
+			HEX_bits = 0b00111111;
+		} else if(numMod == 1) {
+			HEX_bits = 0b00000110;
+		} else if(numMod == 2) {
+			HEX_bits = 0b01011011;
+		} else if(numMod == 3) {
+			HEX_bits = 0b01001111;
+		} else if(numMod == 4) {
+			HEX_bits = 0b01100110;
+		} else if(numMod == 5) {
+			HEX_bits = 0b01101101;
+		} else if(numMod == 6) {
+			HEX_bits = 0b01111100;
+		} else if(numMod == 7) {
+			HEX_bits = 0b00000111;
+		} else if(numMod == 8) {
+			HEX_bits = 0b01111111;
+		} else if(numMod == 9) {
+			HEX_bits = 0b01100111;
+		} else {
+			HEX_bits = 0b00000000;
+		}
+		
+		allHEXBits = allHEXBits | HEX_bits;
+	}
 	
-	//printf("%c\n", keyPressed);
+	*HEX_ptr = allHEXBits;
 	return;
 }
 
 // Define the IRQ exception handler
 void __attribute__ ((interrupt)) __cs3_isr_irq () {
 	int interrupt_ID = *((int *) 0xFFFEC10C); //Read the ICCIAR from the CPU Interface in the GIC
-	if (interrupt_ID == 79) { // check if interrupt is from the PS/2
+	/*if (interrupt_ID == 79) { // check if interrupt is from the PS/2
 		PS2_ISR();
-	} else if(interrupt_ID == 73) {
+	} else */if(interrupt_ID == 73) {
 		KEY_ISR();
+	} else if(interrupt_ID == 72) {
+		timer_ISR();
 	} else
 		while (1); // if unexpected, then stay here
 	
@@ -294,8 +270,3 @@ void set_A9_IRQ_stack() {
 	mode = 0b11010011;
 	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 }
-
-
-
-
-

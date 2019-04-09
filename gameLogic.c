@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
-//#include "configGIC.h"
+#include "configGIC.h"
 //#include "address_map_arm.h"
 
 #define ROWS 5
@@ -13,8 +13,8 @@
 #define YELLOW 4
 #define ORANGE 5
 
-//extern char keyPressed;
-//extern char color_select;
+extern char keyPressed;
+extern char color_select;
 
 //create a 5x5 array
 //array stores the start and end position of each color as an uppercase letter 
@@ -22,30 +22,6 @@
 //array also stores direction of movement as lowercase letters
 	//ie: moving for color red is stored as 'r'
 	
-/*const int startRedX = 0;
-	const int startRedY = 0;
-	const int endRedX = 1;
-	const int endRedY = 4;
-	
-	const int startGreenX = 2;
-	const int startGreenY = 0;
-	const int endGreenX = 1;
-	const int endGreenY = 3;
-	
-	const int startBlueX = 2;
-	const int startBlueY = 4;
-	const int endBlueX = 2;
-	const int endBlueY = 1;
-	
-	const int startYellowX = 4;
-	const int startYellowY = 0;
-	const int endYellowX = 3;
-	const int endYellowY = 3;
-	
-	const int startOrangeX = 3;
-	const int startOrangeY = 4;
-	const int endOrangeX = 4;
-	const int endOrangeY = 1;*/
 
 void gameLogic(char gameBoard[5][5], int color_select, char keyPressed);
 
@@ -92,9 +68,6 @@ void gameLogic(char gameBoard[5][5], int color_select, char keyPressed) {
 			}
 		}
 	}
-	
-	//testing
-    /* printf("\nthis is the gameBoard before any moves are made: \n");
 	for(x = 0; x < 5; x++) {
 		for(int y = 0; y < 5; y++) {
 			printf("%c ", gameBoard[x][y]);
@@ -123,12 +96,6 @@ void gameLogic(char gameBoard[5][5], int color_select, char keyPressed) {
 	bool bluePathFound = false;
 	bool yellowPathFound = false;
 	bool orangePathFound = false;
-	
-	/*
-	- game over condition: gameBoard[colorXPosition][colorYPosition] == R/G/B/Y/O
-	- otherwise, game isn't over
-	- 
-	*/
 	
 	while(!gameOver) {
 		if(color_select == RED) {
@@ -505,15 +472,7 @@ void gameLogic(char gameBoard[5][5], int color_select, char keyPressed) {
 			
 		}
 		
-        /* //testing
-		printf("\nthis is the gameBoard after one move up for blue from the start: \n");
-		for(x = 0; x < 5; x++) {
-			for(int y = 0; y < 5; y++) {
-				printf("%c ", gameBoard[x][y]);
-			}
-			printf("\n");
-		} */
-		
+		//game is over if all of these are true
 		gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
 	}
 }

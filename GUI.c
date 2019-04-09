@@ -572,7 +572,7 @@ void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D o
         } else if (letter == 0x26) {
             // "3"
             color_select = BLUE;
-        } else if (letter == 25) {
+        } else if (letter == 0x25) {
             // "4"
             color_select = YELLOW;
         } else if (letter == 0x2E) {

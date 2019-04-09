@@ -4,6 +4,7 @@ volatile int pixel_buffer_start; // global variable
 #include <stdio.h>
 #include <stdbool.h>
 #include "configGIC.h" // comment this out for CPULATOR
+#include "address_map_arm.h"
 
 #define ROWS 5
 #define COLS 5
@@ -42,7 +43,7 @@ short int color_global;
 
 // Interrupts
 char keyPressed;
-int color_select;
+int color_select = 0;
 int numPressedW;
 int numPressedA;
 int numPressedS;
@@ -210,6 +211,9 @@ int main(void)
 
         // Background
         // Horizontal Line
+
+        // UNCOMMENT THE IF STATMENT TO TEST THIS
+        //if (keyPressed == 'W') {
         draw_line(64, 64, 0, 239, WHITE_U16);
         draw_line(128, 128, 0, 239, WHITE_U16);
         draw_line(192, 192, 0, 239, WHITE_U16);
@@ -219,10 +223,11 @@ int main(void)
         draw_line(0, 319, 96, 96, WHITE_U16);
         draw_line(0, 319, 144, 144, WHITE_U16);
         draw_line(0, 319, 192, 192, WHITE_U16);
+        //}
+
 
         // first select the color
         if (color_select == RED) {
-            draw_line(3, 44, 150, 209, WHITE_U16);
             animate(1, 4, RED_U16);
         }
 

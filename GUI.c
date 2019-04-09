@@ -93,8 +93,15 @@ void initializeBoard (int board[][COLS]) {
 
 }
 
-int main(void)
-{
+int main(void) {
+	
+	//function calls to enable interrupts in ARM and PS/2 keyboard
+	disable_A9_interrupts(); // disable interrupts in the A9 processor
+	set_A9_IRQ_stack(); // initialize the stack pointer for IRQ mode
+	config_GIC(); // configure the general interrupt controller
+	config_PS2s(); // configure PS/2 to generate interrupts
+	enable_A9_interrupts(); // enable interrupts in the A9 processor
+	
     volatile int * pixel_ctrl_ptr = (int *)0xFF203020; // pixel buffer address.
     /* Read location of the pixel buffer from the pixel buffer controller */
     //pixel_buffer_start = *pixel_ctrl_ptr;
@@ -553,25 +560,26 @@ void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D o
 	if(RVALID) {
 		letter = PS2_data & 0xFF;
 		if(letter == 0x1D) {
-			LED = 0x1D;
+			//LED = 0x1D;
 			keyPressed = 'W';
             //numPressedW++; // still need to reset this later. I dont remeber if I need it or not...
 		} else if(letter == 0x1C) {
-			LED = 0x1C;
+			//LED = 0x1C;
 			keyPressed = 'A';
             //numPressedA++;
 		} else if(letter == 0x1B) {
-			LED = 0x1B;
+			//LED = 0x1B;
 			keyPressed = 'S';
             //numPressedS++;
 		} else if(letter == 0x23) {
-			LED = 0x23;
+			//LED = 0x23;
 			keyPressed = 'D';
             //numPressedD++;
         }
 		} else if (letter == 0x16) {
             // "1"
             color_select = RED;
+			
         } else if (letter == 0x1E) {
             // "2"
             color_select = GREEN;
@@ -589,6 +597,8 @@ void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D o
 			LED = 0;
 			keyPressed = 'Z';
 		}
+		
+		LED = letter;
 	}
 
 	*RLEDs = LED; //display the letter on the HEX

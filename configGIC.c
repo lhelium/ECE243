@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 volatile bool resetGame = false;
-volatile bool pressedAgain = false; 
+volatile bool pressedAgain = false;
 
 volatile char byte1, byte2, data;
 volatile char keyPressed;
@@ -25,18 +25,18 @@ int main() {
 	byte1        = 0;
     byte2        = 0;
     data         = 0; // used to hold PS/2 data
-    
+
     //function calls to enable interrupts in ARM and PS/2 keyboard
 	disable_A9_interrupts(); // disable interrupts in the A9 processor
 	set_A9_IRQ_stack(); // initialize the stack pointer for IRQ mode
 	config_GIC(); // configure the general interrupt controller
 	config_PS2s(); // configure PS/2 to generate interrupts
 	config_KEYs(); // configure PS/2 to generate interrupts
-	
+
 	enable_A9_interrupts(); // enable interrupts in the A9 processor
 
     while(1) {}
-	
+
 	return 0;
 }
 
@@ -97,7 +97,7 @@ void config_interrupt (int N, int CPU_target) {
 void config_KEYs() {
 	volatile int * KEY_ptr = (int *) 0xFF200050; // KEY base address
 	*(KEY_ptr + 2) = 0xF; // enable interrupts for all four KEYs
-} 
+}
 
 void KEY_ISR() {
 	/* KEY base address */
@@ -107,11 +107,11 @@ void KEY_ISR() {
 	volatile int* RLEDs = (int*) 0xFF200000;
 	int press, HEX_bits, LEDs;
 	press = *(KEY_ptr + 3); // read the pushbutton interrupt register
-	
+
 	if(press != 0) { //if KEY is pressed, reset the game
 		pressedAgain = !pressedAgain;
 		resetGame = pressedAgain;
-		
+
 		if(resetGame) {
 			LEDs = 0xFFFF;
 			*RLEDs = LEDs;
@@ -119,15 +119,15 @@ void KEY_ISR() {
 			LEDs = 0x0000;
 			*RLEDs = LEDs;
 		}
-		
+
 	}
-	
+
 	*(KEY_ptr + 3) = press; // Clear the interrupt
 	/* if(*(KEY_ptr + 3) == 0) {
 		resetGame = false;
-		
+
 	} */
-	
+
 	if (press & 0x1) // KEY0
 		HEX_bits = 0b00111111;
 	else if (press & 0x2) // KEY1
@@ -136,10 +136,10 @@ void KEY_ISR() {
 		HEX_bits = 0b01011011;
 	else // press & 0x8, which is KEY3
 		HEX_bits = 0b01001111;
-	
+
 	*HEX3_HEX0_ptr = HEX_bits;
-	
-	
+
+
 	return;
 }
 
@@ -150,8 +150,7 @@ void config_PS2s() {
 	*(PS2_ptr_interrupt) = 0x1; // enable interrupts for PS/2 by writing 1 to RE field at address 0xFF200104
 }
 
-
-// void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D or other, and display on HEX
+ void PS2_ISR() { //determine which button on the keyboard was pressed: W,A,S,D or other, and display on HEX
 	//clear the interrupt
 	volatile int* PS2_ptr_interrupt = (int*)0xFF200104;
 	*(PS2_ptr_interrupt) = 0b100000001;
@@ -161,20 +160,20 @@ void config_PS2s() {
 
 	//HEX display base address
 	volatile int *RLEDs = (int *) 0xFF200000;
-	
+
 	int PS2_data, RAVAIL, RVALID, data, LED;
 	//const int W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
 
 	PS2_data = *(PS2_ptr);
-	RAVAIL = (PS2_data & 0xFFFF0000) >> 16;	
-	
+	RAVAIL = (PS2_data & 0xFFFF0000) >> 16;
+
 	if(RAVAIL > 0) {
 		byte1 = byte2;
 		byte2 = data;
 		data = PS2_data & 0xFF;
 
 		//determine the direction of movement (W/A/S/D)
-		
+
 		//if(byte1 == data) {
 			if(data == 0x1D) {
 				LED = 0x1D;
@@ -192,7 +191,7 @@ void config_PS2s() {
 				LED = 0x23;
 				keyPressed = 'D';
 				//printf("D pressed\n");
-				
+
 			//determine the color to move (R/G/B/Y/O)
 			} else if(data == 0x16) {
 				LED = 0x16;
@@ -219,7 +218,7 @@ void config_PS2s() {
 				//color = 'O';
 				keyPressed = '5';
 				//printf("5 pressed\n");
-			
+
 			//error handling
 			} else {
 				LED = 0xFFFF;
@@ -228,13 +227,13 @@ void config_PS2s() {
 				//color = 'B';
 			}
 		//}
-		
+
 	}
-	
+
 	//printf("data: %c\n", data);
 	printf("%c key pressed\n", keyPressed);
 	*RLEDs = LED; //display the hex code on the LEDs
-	
+
 	//printf("%c\n", keyPressed);
 	return;
 }

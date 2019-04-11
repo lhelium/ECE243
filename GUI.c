@@ -4,6 +4,7 @@ volatile int pixel_buffer_start; // global variable
 #include <stdio.h>
 #include <stdbool.h>
 #include "configGIC.h" // comment this out for CPULATOR
+#include "GameOver.h"
 //#include "address_map_arm.h"
 
 #define ROWS 5

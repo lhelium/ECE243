@@ -5,6 +5,7 @@ volatile int pixel_buffer_start; // global variable
 #include <stdbool.h>
 #include "configGIC.h" // comment this out for CPULATOR
 #include "address_map_arm.h"
+#include "GameOver.h"
 
 #define ROWS 5
 #define COLS 5
@@ -42,7 +43,6 @@ int xpos_global, ypos_global;
 short int color_global;
 
 // Interrupts
-
 int numPressedW;
 int numPressedA;
 int numPressedS;
@@ -81,6 +81,7 @@ int currY;
 
 //game legality
 bool isLegalMove(int color_select, char keyPressed);	
+void draw_game_over();
 
 //game board
 char gameBoard[5][5];
@@ -551,7 +552,9 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
 	bool isLegal;
 
     // W UPWARDS
-    if (direction == 1) {
+	if(gameOver) {
+		draw_game_over();
+	} else if (direction == 1) {
 		isLegal = isLegalMove(color_select, keyPressed);
 		
 		if(isLegal) {
@@ -1660,6 +1663,18 @@ void resetGame(bool reset, int board[][COLS]) {
 		
 		
 	}
+}
+
+void draw_game_over() {
+    int i, j;
+    for (i = 0; i < 240; i++) {
+        volatile int j = 0;
+        for (j = 0; j < 320; j++) {
+            if (GameOver[i * 320 + j] != 0x0000) {
+                plot_pixel(j, i, GameOver[i * 320 + j]);
+            }
+        }
+    }
 }
 
 // USELES CODE //

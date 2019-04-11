@@ -83,7 +83,7 @@ int currY = 1000;
 int currDirection = 1000;
 
 //game legality
-bool isLegalMove(int color_select, char keyPressed);	
+bool isLegalMove(int color_select, char keyPressed);
 bool checkGameOver();
 void draw_game_over();
 
@@ -559,14 +559,14 @@ int main(void) {
 		   wait_for_vsync(); // swap front and back buffers on VGA vertical sync
 		   pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
 		}
-		
+
 		while(!reset) {
 			if(checkGameOver()) {
 				draw_game_over();
 				wait_for_vsync(); // swap front and back buffers on VGA vertical sync
 				pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
 				clear_screen();
-				
+
 			}
 		}
 		resetGame(reset, board);
@@ -1582,6 +1582,8 @@ bool isLegalMove(int color_select, char keyPressed) {
 }
 
 void resetGame(bool reset, int board[][COLS]) {
+    currX = 10000;
+    currY = 10000;
 	if(reset) {
 		int i = 0;
 		int j = 0;
@@ -1735,7 +1737,7 @@ void resetGame(bool reset, int board[][COLS]) {
 
 bool checkGameOver() {
 	int x, y;
-	
+
 	for(x = 0; x < 5; x++) {
 		for(y = 0; y < 5; y++) {
 			if(board[x][y] == 0) {

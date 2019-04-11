@@ -45,7 +45,6 @@ short int color_global;
 int pieceRadius = 16;
 
 // Interrupts
-
 int numPressedW;
 int numPressedA;
 int numPressedS;
@@ -84,7 +83,7 @@ int currY = 1000;
 int currDirection = 1000;
 
 //game legality
-bool isLegalMove(int color_select, char keyPressed);
+bool isLegalMove(int color_select, char keyPressed);	
 void draw_game_over();
 
 //game board

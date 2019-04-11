@@ -5,6 +5,7 @@ volatile int pixel_buffer_start; // global variable
 #include <stdbool.h>
 #include "configGIC.h" // comment this out for CPULATOR
 #include "address_map_arm.h"
+#include "GameOver.h"
 
 #define ROWS 5
 #define COLS 5
@@ -37,9 +38,11 @@ void fill_color(int x, int y, short int color);
 void initializeBoard (int board[][COLS]);
 void animate_line(int boardX, int boardY, int direction, short int line_color, short int color, int board[][COLS]);
 void animate (int x, int y, short int color, int board[][COLS]);
+void draw_piece(int piecex, int piecey, short int color) ;
 
 int xpos_global, ypos_global;
 short int color_global;
+int pieceRadius = 16;
 
 // Interrupts
 
@@ -81,6 +84,7 @@ int currY;
 
 //game legality
 bool isLegalMove(int color_select, char keyPressed);
+void draw_game_over();
 
 //game board
 char gameBoard[5][5];
@@ -314,15 +318,15 @@ int main(void) {
         // Horizontal Line
 
         // UNCOMMENT THE IF STATMENT TO TEST THIS
-            draw_line(64, 64, 0, 239, WHITE_U16);
-            draw_line(128, 128, 0, 239, WHITE_U16);
-            draw_line(192, 192, 0, 239, WHITE_U16);
-            draw_line(256, 256, 0, 239, WHITE_U16);
-            //Vertical Line
-            draw_line(0, 319, 48, 48, WHITE_U16);
-            draw_line(0, 319, 96, 96, WHITE_U16);
-            draw_line(0, 319, 144, 144, WHITE_U16);
-            draw_line(0, 319, 192, 192, WHITE_U16);
+        draw_line(64, 64, 0, 239, WHITE_U16);
+        draw_line(128, 128, 0, 239, WHITE_U16);
+        draw_line(192, 192, 0, 239, WHITE_U16);
+        draw_line(256, 256, 0, 239, WHITE_U16);
+        //Vertical Line
+        draw_line(0, 319, 48, 48, WHITE_U16);
+        draw_line(0, 319, 96, 96, WHITE_U16);
+        draw_line(0, 319, 144, 144, WHITE_U16);
+        draw_line(0, 319, 192, 192, WHITE_U16);
 
          // if (keyPressed == 'W') {
          //        //board[0][4] = RED;
@@ -388,6 +392,8 @@ int main(void) {
                 keyRed = false; // turn off the flag
             }
 
+//            draw_piece(x, y, WHITE_U16);
+
         } else if (keyGreen && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
 
             keyRed = false;
@@ -398,6 +404,7 @@ int main(void) {
             x =  greenCurrentX;
             y =  greenCurrentY;
 
+            // for drawing the circles
             currX = x;
             currY = y;
 
@@ -421,6 +428,8 @@ int main(void) {
                 keyGreen = false; // turn off the flag
             }
 
+//         draw_piece(x, y, WHITE_U16);
+
         } else if (keyBlue && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
 
             keyRed = false;
@@ -431,6 +440,7 @@ int main(void) {
             x = blueCurrentX;
             y = blueCurrentY;
 
+            // for drawing the circles
             currX = x;
             currY = y;
 
@@ -453,17 +463,22 @@ int main(void) {
                 keyBlue = false; // turn off the flag
             }
 
+//            draw_piece(x, y, WHITE_U16);
+
         } else if (keyYellow && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
 
             keyRed = false;
             keyGreen = false;
             keyBlue = false;
             keyOrange = false;
+
             x = yellowCurrentX;
             y = yellowCurrentY;
 
+            // for drawing the circles
             currX = x;
             currY = y;
+
             // animate the line:
             if (keyPressed == 'W') {
                 direction  = 1;
@@ -483,6 +498,8 @@ int main(void) {
                 keyYellow = false;
             }
 
+//            draw_piece(x, y, WHITE_U16);
+
         } else if (keyOrange && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
 
             keyRed = false;
@@ -493,6 +510,7 @@ int main(void) {
             x = orangeCurrentX;
             y = orangeCurrentY;
 
+            // for drawing the circles
             currX = x;
             currY = y;
 
@@ -515,6 +533,7 @@ int main(void) {
                 keyOrange = false;
             }
 
+//           draw_piece(currX, currY, WHITE_U16);
         }
 
        wait_for_vsync(); // swap front and back buffers on VGA vertical sync
@@ -528,6 +547,18 @@ int main(void) {
 void plot_pixel(int x, int y, short int line_color)
 {
     *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
+}
+
+void draw_piece(int piecex, int piecey, short int color) {
+    int x = -16;
+    int y = -16;
+    for (x = -16; x <= 16; x++) {
+        for (y = -16; y <= 16; y++) {
+            //if (x*x + y*y <= pieceRadius* pieceRadius) {
+                plot_pixel(piecex + x, piecey + y, color);
+            //}
+        }
+    }
 }
 
 // code not shown for clear_screen() and draw_line() subroutines
@@ -550,10 +581,10 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
 
 	bool isLegal;
 
-    // W UPWARDS
-    if (direction == 1) {
-		isLegal = isLegalMove(color_select, keyPressed);
-
+    if(gameOver) {
+        draw_game_over();
+    } else if (direction == 1) {
+        isLegal = isLegalMove(color_select, keyPressed);
 		if(isLegal) {
 			volatile int* RLEDs = (int*) 0xFF200000;
 			int LED = 0xFFFF;
@@ -1662,34 +1693,14 @@ void resetGame(bool reset, int board[][COLS]) {
 	}
 }
 
-// USELES CODE //
-
-// x and y are BOARD coordinates.
-// void animate (int x, int y, short int color, int board[][COLS]) {
-//     // add interrupt code here
-//     int direction = 0;
-//     printf("ok");
-//     // up
-//     if (keyPressed == 'W') {
-//         direction = 1;
-//         printf("yo fam");
-//         printf("\n");
-//         animate_line(x, y, direction, color, board);
-//     }
-//     // left
-//     else if (keyPressed == 'A') {
-//         direction = 2;
-//         animate_line(x, y, direction, color, board);
-//     }
-//     // down
-//     else if (keyPressed == 'S') {
-//         direction = 3;
-//         animate_line(x, y, direction, color, board);
-//     }
-//     // right
-//     else if (keyPressed == 'D') {
-//         direction = 4;
-//         animate_line(x, y, direction, color, board);
-//     }
-//
-// }
+void draw_game_over() {
+    int i, j;
+    for (i = 0; i < 240; i++) {
+        volatile int j = 0;
+        for (j = 0; j < 320; j++) {
+            if (GameOver[i * 320 + j] != 0x0000) {
+                plot_pixel(j, i, GameOver[i * 320 + j]);
+            }
+        }
+    }
+}

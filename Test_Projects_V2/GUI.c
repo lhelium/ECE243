@@ -80,7 +80,7 @@ int currX;
 int currY;
 
 //game legality
-bool isLegalMove(int color_select, char keyPressed);	
+bool isLegalMove(int color_select, char keyPressed);
 
 //game board
 char gameBoard[5][5];
@@ -141,7 +141,7 @@ void initializeBoard (int board[][COLS]) {
     // ORANGE
     board [4][1] = 5;
     board [3][4] = 5;
-	
+
 	//initializing the gameBoard variable
 	int x = 0, y = 0;
 	for(x = 0; x < 5; x++) {
@@ -181,6 +181,9 @@ int main(void) {
     data         = 0; // used to hold PS/2 data
     keyPressed   = "U";
 
+    int x;
+    int y;
+
 	//function calls to enable interrupts in ARM and PS/2 keyboard
 	disable_A9_interrupts(); // disable interrupts in the A9 processor
 	set_A9_IRQ_stack(); // initialize the stack pointer for IRQ mode
@@ -197,7 +200,7 @@ int main(void) {
     //pixel_buffer_start = *pixel_ctrl_ptr;
     int N = 4; // have N declared objects
     // board of arrays:
-    
+
     initializeBoard(board);
 
     // colors to choose from:
@@ -352,9 +355,6 @@ int main(void) {
         }
         // actual key presses:
 
-        int x = 0;
-        int y = 0;
-
         if (keyRed && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
             // turn off all other flags
             keyGreen = false;
@@ -363,8 +363,8 @@ int main(void) {
             keyOrange = false;
 
             // HARDCODED FOR NOW:
-            x = 0;
-            y = 0;
+            x = redCurrentX;
+            y = redCurrentY;
 
             currX = x;
             currY = y;
@@ -395,8 +395,8 @@ int main(void) {
             keyYellow = false;
             keyOrange = false;
 
-            x = 2;
-            y = 0;
+            x =  greenCurrentX;
+            y =  greenCurrentY;
 
             currX = x;
             currY = y;
@@ -428,8 +428,8 @@ int main(void) {
             keyYellow = false;
             keyOrange = false;
 
-            x = 2;
-            y = 1;
+            x = blueCurrentX;
+            y = blueCurrentY;
 
             currX = x;
             currY = y;
@@ -459,8 +459,8 @@ int main(void) {
             keyGreen = false;
             keyBlue = false;
             keyOrange = false;
-            x = 3;
-            y = 3;
+            x = yellowCurrentX;
+            y = yellowCurrentY;
 
             currX = x;
             currY = y;
@@ -490,8 +490,8 @@ int main(void) {
             keyBlue = false;
             keyYellow = false;
 
-            x = 3;
-            y = 4;
+            x = orangeCurrentX;
+            y = orangeCurrentY;
 
             currX = x;
             currY = y;
@@ -547,13 +547,13 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
     int x1 = 0;  // ending x
     int y0 = 0;  // starting y
     int y1 = 0;  // ending y
-	
+
 	bool isLegal;
 
     // W UPWARDS
     if (direction == 1) {
 		isLegal = isLegalMove(color_select, keyPressed);
-		
+
 		if(isLegal) {
 			volatile int* RLEDs = (int*) 0xFF200000;
 			int LED = 0xFFFF;
@@ -576,12 +576,12 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
 				board[boardX][boardY - 1] = color;
 			}
 		}
-        
+
     }
     // A LEFT
     else if (direction == 2) {
 		isLegal = isLegalMove(color_select, keyPressed);
-		
+
 		if(isLegal) {
 			volatile int* RLEDs = (int*) 0xFF200000;
 			int LED = 0xFFFF;
@@ -602,13 +602,13 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
 				board[boardX - 1][boardY] = color;
 			}
 		}
-		
-        
+
+
     }
     // S DOWNWARDS
     else if (direction == 3) {
 		isLegal = isLegalMove(color_select, keyPressed);
-		
+
 		if(isLegal) {
 			volatile int* RLEDs = (int*) 0xFF200000;
 			int LED = 0xFFFF;
@@ -633,7 +633,7 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
     // D RIGHTWARDS
     else if (direction == 4) {
 		isLegal = isLegalMove(color_select, keyPressed);
-		
+
 		if(isLegal) {
 			volatile int* RLEDs = (int*) 0xFF200000;
 			int LED = 0xFFFF;
@@ -1032,7 +1032,7 @@ bool isLegalMove(int color_select, char keyPressed) {
 	//initialize gameBoard:
 	//lowercase represents start, uppercase represents end
 	//1 represents occupied, 0 represents open
-	
+
 	//testing
 	/*
 	for(x = 0; x < 5; x++) {
@@ -1040,16 +1040,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 			printf("%c ", gameBoard[x][y]);
 		}
 		printf("\n");
-	}*/ 
+	}*/
 
 	//bool gameOver = false;
-	
+
 	//while(!gameOver) {
 		if(color_select == RED) {
 			if(keyPressed == 'W') {
 				int tempY = redCurrentY - 1;
-				
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][redCurrentX] != '0' || redPathFound) { 
+
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][redCurrentX] != '0' || redPathFound) {
 					redCurrentY = redCurrentY;
 					return false;
 				} else {
@@ -1062,15 +1062,15 @@ bool isLegalMove(int color_select, char keyPressed) {
 						redCurrentY = tempY; //change Y accordingly
 						gameBoard[redCurrentY][redCurrentX] = '1'; //mark position as occupied
 					}
-					
+
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'A') {
 				int tempX = redCurrentX - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[redCurrentY][tempX] != '0' || redPathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[redCurrentY][tempX] != '0' || redPathFound) {
 					redCurrentX = redCurrentX;
 					return false;
 				} else {
@@ -1085,12 +1085,12 @@ bool isLegalMove(int color_select, char keyPressed) {
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'S') {
 				int tempY = redCurrentY + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][redCurrentX] != '0' || redPathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][redCurrentX] != '0' || redPathFound) {
 					redCurrentY = redCurrentY;
 					return false;
 				} else {
@@ -1102,16 +1102,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						redCurrentY = tempY; //change Y accordingly
 						gameBoard[redCurrentY][redCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'D') {
 				int tempX = redCurrentX + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[redCurrentY][tempX] != '0' || redPathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[redCurrentY][tempX] != '0' || redPathFound) {
 					redCurrentX = redCurrentX;
 					return false;
 				} else {
@@ -1123,23 +1123,23 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						redCurrentX = tempX; //change Y accordingly
 						gameBoard[redCurrentY][redCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else {
 				redCurrentX = redCurrentX;
 				redCurrentY = redCurrentY;
 				return false;
 			}
-			
+
 		} else if(color_select == GREEN) {
 			if(keyPressed == 'W') {
 				int tempY = greenCurrentY - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][greenCurrentX] != '0' || greenPathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][greenCurrentX] != '0' || greenPathFound) {
 					greenCurrentY = greenCurrentY;
 					return false;
 				} else {
@@ -1151,16 +1151,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						greenCurrentY = tempY; //change Y accordingly
 						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'A') {
 				int tempX = greenCurrentX - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[greenCurrentY][tempX] != '0' || greenPathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[greenCurrentY][tempX] != '0' || greenPathFound) {
 					greenCurrentX = greenCurrentX;
 					return false;
 				} else {
@@ -1172,16 +1172,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						greenCurrentX = tempX; //change Y accordingly
 						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'S') {
 				int tempY = greenCurrentY + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][greenCurrentX] != '0' || greenPathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][greenCurrentX] != '0' || greenPathFound) {
 					greenCurrentY = greenCurrentY;
 					return false;
 				} else {
@@ -1193,16 +1193,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						greenCurrentY = tempY; //change Y accordingly
 						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'D') {
 				int tempX = greenCurrentX + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[greenCurrentY][tempX] != '0' || greenPathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[greenCurrentY][tempX] != '0' || greenPathFound) {
 					greenCurrentX = greenCurrentX;
 					return false;
 				} else {
@@ -1214,24 +1214,24 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						greenCurrentX = tempX; //change Y accordingly
 						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else {
 				greenCurrentX = greenCurrentX;
 				greenCurrentY = greenCurrentY;
 				return false;
 			}
-			
+
 		} else if(color_select == BLUE) {
-			
+
 			if(keyPressed == 'W') {
 				int tempY = blueCurrentY - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][blueCurrentX] != '0' || bluePathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][blueCurrentX] != '0' || bluePathFound) {
 					blueCurrentY = blueCurrentY;
 					return false;
 				} else {
@@ -1243,16 +1243,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						blueCurrentY = tempY; //change Y accordingly
 						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'A') {
 				int tempX = blueCurrentX - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[blueCurrentY][tempX] != '0' || bluePathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[blueCurrentY][tempX] != '0' || bluePathFound) {
 					blueCurrentX = blueCurrentX;
 					return false;
 				} else {
@@ -1264,16 +1264,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						blueCurrentX = tempX; //change Y accordingly
 						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'S') {
 				int tempY = blueCurrentY + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][blueCurrentX] != '0' || bluePathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][blueCurrentX] != '0' || bluePathFound) {
 					blueCurrentY = blueCurrentY;
 					return false;
 				} else {
@@ -1285,16 +1285,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						blueCurrentY = tempY; //change Y accordingly
 						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'D') {
 				int tempX = blueCurrentX + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[blueCurrentY][tempX] != '0' || bluePathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[blueCurrentY][tempX] != '0' || bluePathFound) {
 					blueCurrentX = blueCurrentX;
 					return false;
 				} else {
@@ -1306,24 +1306,24 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						blueCurrentX = tempX; //change Y accordingly
 						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else {
 				blueCurrentX = blueCurrentX;
 				blueCurrentY = blueCurrentY;
 				return false;
 			}
-			
+
 		} else if(color_select == YELLOW) {
-			
+
 			if(keyPressed == 'W') {
 				int tempY = yellowCurrentY - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][yellowCurrentX] != '0' || yellowPathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][yellowCurrentX] != '0' || yellowPathFound) {
 					yellowCurrentY = yellowCurrentY;
 					return false;
 				} else {
@@ -1335,16 +1335,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						yellowCurrentY = tempY; //change Y accordingly
 						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'A') {
 				int tempX = yellowCurrentX - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[yellowCurrentY][tempX] != '0' || yellowPathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[yellowCurrentY][tempX] != '0' || yellowPathFound) {
 					yellowCurrentX = yellowCurrentX;
 					return false;
 				} else {
@@ -1356,16 +1356,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						yellowCurrentX = tempX; //change Y accordingly
 						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'S') {
 				int tempY = yellowCurrentY + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][yellowCurrentX] != '0' || yellowPathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][yellowCurrentX] != '0' || yellowPathFound) {
 					yellowCurrentY = yellowCurrentY;
 					return false;
 				} else {
@@ -1377,16 +1377,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						yellowCurrentY = tempY; //change Y accordingly
 						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'D') {
 				int tempX = yellowCurrentX + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[yellowCurrentY][tempX] != '0' || yellowPathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[yellowCurrentY][tempX] != '0' || yellowPathFound) {
 					yellowCurrentX = yellowCurrentX;
 					return false;
 				} else {
@@ -1398,24 +1398,24 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						yellowCurrentX = tempX; //change Y accordingly
 						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else {
 				yellowCurrentX = yellowCurrentX;
 				yellowCurrentY = yellowCurrentY;
 				return false;
 			}
-			
+
 		} else if(color_select == ORANGE) {
-			
+
 			if(keyPressed == 'W') {
 				int tempY = orangeCurrentY - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][orangeCurrentX] != '0' || orangePathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][orangeCurrentX] != '0' || orangePathFound) {
 					orangeCurrentY = orangeCurrentY;
 					return false;
 				} else {
@@ -1427,16 +1427,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						orangeCurrentY = tempY; //change Y accordingly
 						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'A') {
 				int tempX = orangeCurrentX - 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[orangeCurrentY][tempX] != '0' || orangePathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[orangeCurrentY][tempX] != '0' || orangePathFound) {
 					orangeCurrentX = orangeCurrentX;
 					return false;
 				} else {
@@ -1448,16 +1448,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						orangeCurrentX = tempX; //change Y accordingly
 						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'S') {
 				int tempY = orangeCurrentY + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempY < 0 || tempY > 4 || gameBoard[tempY][orangeCurrentX] != '0' || orangePathFound) { 
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][orangeCurrentX] != '0' || orangePathFound) {
 					orangeCurrentY = orangeCurrentY;
 					return false;
 				} else {
@@ -1469,16 +1469,16 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						orangeCurrentY = tempY; //change Y accordingly
 						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else if(keyPressed == 'D') {
 				int tempX = orangeCurrentX + 1;
-				
+
 				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
-				if(tempX < 0 || tempX > 4 || gameBoard[orangeCurrentY][tempX] != '0' || orangePathFound) { 
+				if(tempX < 0 || tempX > 4 || gameBoard[orangeCurrentY][tempX] != '0' || orangePathFound) {
 					orangeCurrentX = orangeCurrentX;
 					return false;
 				} else {
@@ -1490,21 +1490,21 @@ bool isLegalMove(int color_select, char keyPressed) {
 					} else { //didn't reach the end, but is a valid move
 						orangeCurrentX = tempX; //change Y accordingly
 						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
-						
+
 					}
 					return true;
 				}
-				
+
 			} else {
 				orangeCurrentX = orangeCurrentX;
 				orangeCurrentY = orangeCurrentY;
 				return false;
 			}
-			
+
 		} else {
 			return false;
 		}
-		
+
 		//game is over if all of these are true
 		//gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
 	//}
@@ -1536,7 +1536,7 @@ void resetGame(bool reset, int board[][COLS]) {
 		// ORANGE
 		board [4][1] = 5;
 		board [3][4] = 5;
-		
+
 		int row, col;
 		//draw original screen
 		for (row = 0; row < ROWS; row++) {
@@ -1601,7 +1601,7 @@ void resetGame(bool reset, int board[][COLS]) {
 				// printf("\n");
 			}
 		}
-		
+
 		//reset all global variables
 		//global variables for keeping track of game status
 		gameOver = false;
@@ -1626,7 +1626,7 @@ void resetGame(bool reset, int board[][COLS]) {
 
 		orangeCurrentX = 3;
 		orangeCurrentY = 4;
-		
+
 		//reset gameBoard
 		//initializing the gameBoard variable
 		int x = 0, y = 0;
@@ -1657,8 +1657,8 @@ void resetGame(bool reset, int board[][COLS]) {
 				}
 			}
 		}
-		
-		
+
+
 	}
 }
 

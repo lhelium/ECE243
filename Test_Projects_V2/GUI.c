@@ -35,7 +35,7 @@ void draw_line(int x0, int x1, int y0, int y1, short int color);
 void swap(int* a, int*b); // you gotta use pointers
 void fill_color(int x, int y, short int color);
 void initializeBoard (int board[][COLS]);
-void animate_line(int boardX, int boardY, int direction, short int line_color, int board[][COLS]);
+void animate_line(int boardX, int boardY, int direction, short int line_color, short int color, int board[][COLS]);
 void animate (int x, int y, short int color, int board[][COLS]);
 
 int xpos_global, ypos_global;
@@ -67,6 +67,17 @@ volatile bool resetGame = false;
 volatile bool pressedAgain = false;
 volatile char byte1, byte2, data;
 volatile char keyPressed;
+
+bool keyRed = false;
+bool keyGreen = false;
+bool keyBlue = false;
+bool keyYellow = false;
+bool keyOrange = false;
+
+//current position
+int currX;
+int currY;
+
 
 
 void initializeBoard (int board[][COLS]) {
@@ -165,7 +176,8 @@ int main(void) {
     clear_screen();
     int row = 0;
     int col = 0;
-    //printf("okokokk");
+    int direction = 0; // 1: UP, 2: LEFT, 3: DOWN, 4: RIGHT
+
     //this doesn't want to work:
     for (row = 0; row < ROWS; row++) {
         for (col = 0; col < COLS; col++) {
@@ -245,34 +257,200 @@ int main(void) {
             draw_line(0, 319, 144, 144, WHITE_U16);
             draw_line(0, 319, 192, 192, WHITE_U16);
 
-         if (keyPressed == 'W') {
-                //board[0][4] = RED;
-             volatile int* RLEDs = (int*) 0xFF200000;
-             int LED;
-             LED = 0xFFFF;
-             *RLEDs = LED;
-         }
+         // if (keyPressed == 'W') {
+         //        //board[0][4] = RED;
+         //     // volatile int* RLEDs = (int*) 0xFF200000;
+         //     // int LED;
+         //     // LED = 0xFFFF;
+         //     // *RLEDs = LED;
+         // }
 
 
         // first select the color
-        if (color_select == RED) {
-            animate(1, 4, RED_U16, board);
+        if (keyPressed == '1') {
+            keyRed = true;
         }
 
-        else if (color_select == GREEN) {
-            animate(2, 0, GREEN_U16, board);
+        else if (keyPressed == '2') {
+            keyGreen = true;
         }
 
-        else if (color_select == BLUE) {
-            animate(2, 1, BLUE_U16, board);
+        else if (keyPressed == '3') {
+            keyBlue = true;
         }
 
-        else if (color_select == YELLOW) {
-            animate(4, 0, YELLOW_U16, board);
+        else if (keyPressed == '4') {
+            keyYellow = true;
         }
 
-        else if (color_select == ORANGE) {
-            animate(4, 1, ORANGE_U16, board);
+        else if (keyPressed == '5') {
+            keyOrange = true;
+        }
+        // actual key presses:
+
+        int x = 0;
+        int y = 0;
+
+        if (keyRed && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
+            // turn off all other flags
+            keyGreen = false;
+            keyBlue = false;
+            keyYellow = false;
+            keyOrange = false;
+
+            // HARDCODED FOR NOW:
+            x = 0;
+            y = 0;
+
+            currX = x;
+            currY = y;
+
+            // animate the line:
+            if (keyPressed == 'W') {
+                direction  = 1;
+                animate_line(x, y, direction, RED_U16, RED, board);
+                keyRed = false; // turn off the flag
+            } else if (keyPressed == 'A') {
+                direction  = 2;
+                animate_line(x, y, direction, RED_U16, RED, board);
+                keyRed = false; // turn off the flag
+            } else if (keyPressed == 'S') {
+                direction  = 3;
+                animate_line(x, y, direction, RED_U16, RED, board);
+                keyRed = false; // turn off the flag
+            } else if (keyPressed == 'D') {
+                direction  = 4;
+                animate_line(x, y, direction, RED_U16, RED, board);
+                keyRed = false; // turn off the flag
+            }
+
+        } else if (keyGreen && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
+
+            keyRed = false;
+            keyBlue = false;
+            keyYellow = false;
+            keyOrange = false;
+
+            x = 2;
+            y = 0;
+
+            currX = x;
+            currY = y;
+
+            //anime the lines
+            // animate the line:
+            if (keyPressed == 'W') {
+                direction  = 1;
+                animate_line(x, y, direction, GREEN_U16, GREEN, board);
+                keyGreen = false; // turn off the flag
+            } else if (keyPressed == 'A') {
+                direction  = 2;
+                animate_line(x, y, direction, GREEN_U16, GREEN, board);
+                keyGreen = false; // turn off the flag
+            } else if (keyPressed == 'S') {
+                direction  = 3;
+                animate_line(x, y, direction, GREEN_U16, GREEN, board);
+                keyGreen = false; // turn off the flag
+            } else if (keyPressed == 'D') {
+                direction  = 4;
+                animate_line(x, y, direction, GREEN_U16, GREEN, board);
+                keyGreen = false; // turn off the flag
+            }
+
+        } else if (keyBlue && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
+
+            keyRed = false;
+            keyGreen = false;
+            keyYellow = false;
+            keyOrange = false;
+
+            x = 2;
+            y = 1;
+
+            currX = x;
+            currY = y;
+
+            // animate the line:
+            if (keyPressed == 'W') {
+                direction  = 1;
+                animate_line(x, y, direction, BLUE_U16, BLUE, board);
+                keyBlue = false; // turn off the flag
+            } else if (keyPressed == 'A') {
+                direction  = 2;
+                animate_line(x, y, direction, BLUE_U16, BLUE, board);
+                keyBlue = false; // turn off the flag
+            } else if (keyPressed == 'S') {
+                direction  = 3;
+                animate_line(x, y, direction, BLUE_U16, BLUE, board);
+                keyBlue = false; // turn off the flag
+            } else if (keyPressed == 'D') {
+                direction  = 4;
+                animate_line(x, y, direction, BLUE_U16, BLUE, board);
+                keyBlue = false; // turn off the flag
+            }
+
+        } else if (keyYellow && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
+
+            keyRed = false;
+            keyGreen = false;
+            keyBlue = false;
+            keyOrange = false;
+            x = 3;
+            y = 3;
+
+            currX = x;
+            currY = y;
+            // animate the line:
+            if (keyPressed == 'W') {
+                direction  = 1;
+                animate_line(x, y, direction, YELLOW_U16, YELLOW, board);
+                keyYellow = false;
+            } else if (keyPressed == 'A') {
+                direction  = 2;
+                animate_line(x, y, direction,  YELLOW_U16, YELLOW, board);
+                keyYellow = false;
+            } else if (keyPressed == 'S') {
+                direction  = 3;
+                animate_line(x, y, direction,  YELLOW_U16, YELLOW,board);
+                keyYellow = false;
+            } else if (keyPressed == 'D') {
+                direction  = 4;
+                animate_line(x, y, direction,  YELLOW_U16,YELLOW, board);
+                keyYellow = false;
+            }
+
+        } else if (keyOrange && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
+
+            keyRed = false;
+            keyGreen = false;
+            keyBlue = false;
+            keyYellow = false;
+
+            x = 3;
+            y = 4;
+
+            currX = x;
+            currY = y;
+
+            // animate the line:
+            if (keyPressed == 'W') {
+                direction  = 1;
+                animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
+                keyOrange = false;
+            } else if (keyPressed == 'A') {
+                direction  = 2;
+                animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
+                keyOrange = false;
+            } else if (keyPressed == 'S') {
+                direction  = 3;
+                animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
+                keyOrange = false;
+            } else if (keyPressed == 'D') {
+                direction  = 4;
+                animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
+                keyOrange = false;
+            }
+
         }
 
        wait_for_vsync(); // swap front and back buffers on VGA vertical sync
@@ -283,37 +461,6 @@ int main(void) {
     return 0;
 }
 
-
-// x and y are BOARD coordinates.
-void animate (int x, int y, short int color, int board[][COLS]) {
-    // add interrupt code here
-    int direction = 0;
-    printf("ok");
-    // up
-    if (keyPressed == 'W') {
-        direction = 1;
-        printf("yo fam");
-        printf("\n");
-        animate_line(x, y, direction, color, board);
-    }
-    // left
-    else if (keyPressed == 'A') {
-        direction = 2;
-        animate_line(x, y, direction, color, board);
-    }
-    // down
-    else if (keyPressed == 'S') {
-        direction = 3;
-        animate_line(x, y, direction, color, board);
-    }
-    // right
-    else if (keyPressed == 'D') {
-        direction = 4;
-        animate_line(x, y, direction, color, board);
-    }
-
-}
-
 void plot_pixel(int x, int y, short int line_color)
 {
     *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
@@ -321,7 +468,7 @@ void plot_pixel(int x, int y, short int line_color)
 
 // code not shown for clear_screen() and draw_line() subroutines
 // takes in argument for the box position on the board, the WASD direction and the U16 color.
-void animate_line(int boardX, int boardY, int direction, short int line_color, int board[][COLS]) {
+void animate_line(int boardX, int boardY, int direction, short int line_color, short int color, int board[][COLS]) {
 
     //convert board position onto x,y coordinates on the screen
     int startX = boardX * 64;
@@ -342,47 +489,53 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, i
         x0 = startX;
         x1 = endXRIGHT;
         y0 = startY;
-        y1 = y0;
+        y1 = startY;
         for (startY = boardY * 48; startY < endYUP; startY++) {
             // Horizontal Line
-            y0 += direction;
-            y1 = y0;
-            draw_line(x0, y0, x1, y1, line_color);
+            y0 -= direction;
+            y1 -= direction;
+            draw_line(x0, x1, y0, y1, line_color);
             wait_for_vsync();
-            draw_line(x0, y0, x1, y1, 0x0000);
+            //draw_line(x0, x1, y0, y1, 0x0000);
         }
         //fill_color(boardX, boardY, line_color);
-        board[boardX][boardY + 1] = RED;
+        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+            board[boardX][boardY - 1] = color;
+        }
     }
     // A LEFT
     else if (direction == 2) {
         x0 = startX;
-        x1 = x0;
+        x1 = startX;
         y0 = startY;
         y1 = endYUP; // needsd checking
         for (startX = boardX * 64; startX > endXLEFT; startX--) {
             x0 -= direction;
-            x1 = x0;
-            draw_line(x0, y0, x1, y1, line_color);
+            x1 -= direction;
+            draw_line(x0, x1, y0, y1, line_color);
             wait_for_vsync();
-            draw_line(x0, y0, x1, y1, 0x0000);
+            //draw_line(x0, x1, y0, y1, 0x0000);
         }
-        board[boardX - 1][boardY] = RED;
+        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+            board[boardX - 1][boardY] = color;
+        }
     }
     // S DOWNWARDS
     else if (direction == 3) {
         x0 = startX;
         x1 = endXRIGHT;
         y0 = startY;
-        y1 = y0;
+        y1 = startY;
         for (startY = boardY * 48; startY > endYDOWN; startY--) {
-            y0 -= direction;
-            y1 = y0;
-            draw_line(x0, y0, x1, y1, line_color);
+            y0 += direction;
+            y1 += direction;
+            draw_line(x0, x1, y0, y1, line_color);
             wait_for_vsync();
-            draw_line(x0, y0, x1, y1, 0x0000);
+            //draw_line(x0, x1, y0, y1, 0x0000);
         }
-        board[boardX][boardY - 1] = RED;
+        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+            board[boardX][boardY + 1] = color;
+        }
     }
     // D RIGHTWARDS
     else if (direction == 4) {
@@ -392,12 +545,14 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, i
         y1 = endYUP; // needsd checking
         for (startX = boardX * 64; startX < endXRIGHT; startX++) {
             x0 += direction;
-            x1 = x0;
-            draw_line(x0, y0, x1, y1, line_color);
+            x1 += direction;
+            draw_line(x0, x1, y0, y1, line_color);
             wait_for_vsync();
-            draw_line(x0, y0, x1, y1, 0x0000);
+            //draw_line(x0, x1, y0, y1, 0x0000);
         }
-        board[boardX + 1][boardY] = RED;
+        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+            board[boardX + 1][boardY] = color;
+        }
     }
 }
 
@@ -764,3 +919,35 @@ void set_A9_IRQ_stack() {
 	mode = 0b11010011;
 	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 }
+
+// USELES CODE //
+
+// x and y are BOARD coordinates.
+// void animate (int x, int y, short int color, int board[][COLS]) {
+//     // add interrupt code here
+//     int direction = 0;
+//     printf("ok");
+//     // up
+//     if (keyPressed == 'W') {
+//         direction = 1;
+//         printf("yo fam");
+//         printf("\n");
+//         animate_line(x, y, direction, color, board);
+//     }
+//     // left
+//     else if (keyPressed == 'A') {
+//         direction = 2;
+//         animate_line(x, y, direction, color, board);
+//     }
+//     // down
+//     else if (keyPressed == 'S') {
+//         direction = 3;
+//         animate_line(x, y, direction, color, board);
+//     }
+//     // right
+//     else if (keyPressed == 'D') {
+//         direction = 4;
+//         animate_line(x, y, direction, color, board);
+//     }
+//
+// }

@@ -4,7 +4,7 @@ volatile int pixel_buffer_start; // global variable
 #include <stdio.h>
 #include <stdbool.h>
 #include "configGIC.h" // comment this out for CPULATOR
-//#include "address_map_arm.h"
+#include "address_map_arm.h"
 
 #define ROWS 5
 #define COLS 5
@@ -35,8 +35,8 @@ void draw_line(int x0, int x1, int y0, int y1, short int color);
 void swap(int* a, int*b); // you gotta use pointers
 void fill_color(int x, int y, short int color);
 void initializeBoard (int board[][COLS]);
-void animate_line(int boardX, int boardY, int direction, short int line_color);
-void animate (int x, int y, short int color);
+void animate_line(int boardX, int boardY, int direction, short int line_color, int board[][COLS]);
+void animate (int x, int y, short int color, int board[][COLS]);
 
 int xpos_global, ypos_global;
 short int color_global;
@@ -104,15 +104,20 @@ int main(void) {
     byte1        = 0;
     byte2        = 0;
     data         = 0; // used to hold PS/2 data
+    keyPressed   = "U";
 
 	//function calls to enable interrupts in ARM and PS/2 keyboard
 	disable_A9_interrupts(); // disable interrupts in the A9 processor
 	set_A9_IRQ_stack(); // initialize the stack pointer for IRQ mode
 	config_GIC(); // configure the general interrupt controller
 	config_PS2s(); // configure PS/2 to generate interrupts
+	config_KEYs(); // configure PS/2 to generate interrupts
+
 	enable_A9_interrupts(); // enable interrupts in the A9 processor
 
-    volatile int * pixel_ctrl_ptr = (int *)0xFF203020; // pixel buffer address.
+	//while(1) {}
+
+	volatile int * pixel_ctrl_ptr = (int *)0xFF203020; // pixel buffer address.
     /* Read location of the pixel buffer from the pixel buffer controller */
     //pixel_buffer_start = *pixel_ctrl_ptr;
     int N = 4; // have N declared objects
@@ -230,38 +235,44 @@ int main(void) {
         // Horizontal Line
 
         // UNCOMMENT THE IF STATMENT TO TEST THIS
-        //if (keyPressed == 'W') {
-        draw_line(64, 64, 0, 239, WHITE_U16);
-        draw_line(128, 128, 0, 239, WHITE_U16);
-        draw_line(192, 192, 0, 239, WHITE_U16);
-        draw_line(256, 256, 0, 239, WHITE_U16);
-        //Vertical Line
-        draw_line(0, 319, 48, 48, WHITE_U16);
-        draw_line(0, 319, 96, 96, WHITE_U16);
-        draw_line(0, 319, 144, 144, WHITE_U16);
-        draw_line(0, 319, 192, 192, WHITE_U16);
-        //}
+            draw_line(64, 64, 0, 239, WHITE_U16);
+            draw_line(128, 128, 0, 239, WHITE_U16);
+            draw_line(192, 192, 0, 239, WHITE_U16);
+            draw_line(256, 256, 0, 239, WHITE_U16);
+            //Vertical Line
+            draw_line(0, 319, 48, 48, WHITE_U16);
+            draw_line(0, 319, 96, 96, WHITE_U16);
+            draw_line(0, 319, 144, 144, WHITE_U16);
+            draw_line(0, 319, 192, 192, WHITE_U16);
+
+         if (keyPressed == 'W') {
+                //board[0][4] = RED;
+             volatile int* RLEDs = (int*) 0xFF200000;
+             int LED;
+             LED = 0xFFFF;
+             *RLEDs = LED;
+         }
 
 
         // first select the color
         if (color_select == RED) {
-            animate(1, 4, RED_U16);
+            animate(1, 4, RED_U16, board);
         }
 
         else if (color_select == GREEN) {
-            animate(2, 0, GREEN_U16);
+            animate(2, 0, GREEN_U16, board);
         }
 
         else if (color_select == BLUE) {
-            animate(2, 1, BLUE_U16);
+            animate(2, 1, BLUE_U16, board);
         }
 
         else if (color_select == YELLOW) {
-            animate(4, 0, YELLOW_U16);
+            animate(4, 0, YELLOW_U16, board);
         }
 
         else if (color_select == ORANGE) {
-            animate(4, 1, ORANGE_U16);
+            animate(4, 1, ORANGE_U16, board);
         }
 
        wait_for_vsync(); // swap front and back buffers on VGA vertical sync
@@ -272,8 +283,9 @@ int main(void) {
     return 0;
 }
 
+
 // x and y are BOARD coordinates.
-void animate (int x, int y, short int color) {
+void animate (int x, int y, short int color, int board[][COLS]) {
     // add interrupt code here
     int direction = 0;
     printf("ok");
@@ -282,22 +294,22 @@ void animate (int x, int y, short int color) {
         direction = 1;
         printf("yo fam");
         printf("\n");
-        animate_line(x, y, direction, color);
+        animate_line(x, y, direction, color, board);
     }
     // left
     else if (keyPressed == 'A') {
         direction = 2;
-        animate_line(x, y, direction, color);
+        animate_line(x, y, direction, color, board);
     }
     // down
     else if (keyPressed == 'S') {
         direction = 3;
-        animate_line(x, y, direction, color);
+        animate_line(x, y, direction, color, board);
     }
     // right
     else if (keyPressed == 'D') {
         direction = 4;
-        animate_line(x, y, direction, color);
+        animate_line(x, y, direction, color, board);
     }
 
 }
@@ -309,7 +321,7 @@ void plot_pixel(int x, int y, short int line_color)
 
 // code not shown for clear_screen() and draw_line() subroutines
 // takes in argument for the box position on the board, the WASD direction and the U16 color.
-void animate_line(int boardX, int boardY, int direction, short int line_color) {
+void animate_line(int boardX, int boardY, int direction, short int line_color, int board[][COLS]) {
 
     //convert board position onto x,y coordinates on the screen
     int startX = boardX * 64;
@@ -339,7 +351,8 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
         }
-        fill_color(boardX, boardY, line_color);
+        //fill_color(boardX, boardY, line_color);
+        board[boardX][boardY + 1] = RED;
     }
     // A LEFT
     else if (direction == 2) {
@@ -354,7 +367,7 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
         }
-        fill_color(boardX, boardY, line_color);
+        board[boardX - 1][boardY] = RED;
     }
     // S DOWNWARDS
     else if (direction == 3) {
@@ -369,7 +382,7 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
         }
-        fill_color(boardX, boardY, line_color);
+        board[boardX][boardY - 1] = RED;
     }
     // D RIGHTWARDS
     else if (direction == 4) {
@@ -384,7 +397,7 @@ void animate_line(int boardX, int boardY, int direction, short int line_color) {
             wait_for_vsync();
             draw_line(x0, y0, x1, y1, 0x0000);
         }
-        fill_color(boardX, boardY, line_color);
+        board[boardX + 1][boardY] = RED;
     }
 }
 
@@ -489,6 +502,7 @@ void draw_line(int x0, int x1, int y0, int y1, short int line_color)
         }
     }
 }
+
 
 // CODE BELOW ARE INTERUPT RELATED:
 /*Turn on interrupts in the ARM processor*/
@@ -627,13 +641,17 @@ void config_PS2s() {
 
 		//determine the direction of movement (W/A/S/D)
 
-		//if(byte1 == data) {
+		//if(byte1 != data) {
 			if(data == 0x1D) {
-				LED = 0x1D;
+				//LED = 0x1D;
 				keyPressed = 'W';
+
 				//printf("W pressed\n");
 			} else if(data == 0x1C) {
 				LED = 0x1C;
+
+                //Vertical Line
+
 				keyPressed = 'A';
 				//printf("A pressed\n");
 			} else if(data == 0x1B) {
@@ -684,7 +702,7 @@ void config_PS2s() {
 	}
 
 	//printf("data: %c\n", data);
-	printf("%c key pressed\n", keyPressed);
+	//printf("%c key pressed\n", keyPressed);
 	*RLEDs = LED; //display the hex code on the LEDs
 
 	//printf("%c\n", keyPressed);

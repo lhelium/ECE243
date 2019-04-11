@@ -42,7 +42,7 @@ int xpos_global, ypos_global;
 short int color_global;
 
 // Interrupts
-int color_select = 0;
+
 int numPressedW;
 int numPressedA;
 int numPressedS;
@@ -67,6 +67,7 @@ volatile bool resetGame = false;
 volatile bool pressedAgain = false;
 volatile char byte1, byte2, data;
 volatile char keyPressed;
+volatile int color_select = 0;
 
 bool keyRed = false;
 bool keyGreen = false;
@@ -78,6 +79,35 @@ bool keyOrange = false;
 int currX;
 int currY;
 
+//game legality
+bool isLegalMove(int color_select, char keyPressed);
+
+//game board
+char gameBoard[5][5];
+
+//global variables for keeping track of game status
+bool gameOver = false;
+bool redPathFound = false;
+bool greenPathFound = false;
+bool bluePathFound = false;
+bool yellowPathFound = false;
+bool orangePathFound = false;
+
+//global variables for keeping track of position - initialized to the starting positions
+int redCurrentX = 0;
+int redCurrentY = 0;
+
+int greenCurrentX = 2;
+int greenCurrentY = 0;
+
+int blueCurrentX = 2;
+int blueCurrentY = 4;
+
+int yellowCurrentX = 4;
+int yellowCurrentY = 0;
+
+int orangeCurrentX = 3;
+int orangeCurrentY = 4;
 
 
 void initializeBoard (int board[][COLS]) {
@@ -107,6 +137,36 @@ void initializeBoard (int board[][COLS]) {
     // ORANGE
     board [4][1] = 5;
     board [3][4] = 5;
+
+	//initializing the gameBoard variable
+	int x = 0, y = 0;
+	for(x = 0; x < 5; x++) {
+		for(y = 0; y < 5; y++) {
+			if(x == 0 && y == 0) { //red start
+				gameBoard[x][y] = 'r';
+			} else if(y == 1 && x == 4) { //red end
+				gameBoard[x][y] = 'R';
+			} else if(y == 2 && x == 0) { //green start
+				gameBoard[x][y] = 'g';
+			} else if(y == 1 && x == 3) { //green end
+				gameBoard[x][y] = 'G';
+			} else if(y == 2 && x == 4) { //blue start
+				gameBoard[x][y] = 'b';
+			} else if(y == 2 && x == 1) { //blue end
+				gameBoard[x][y] = 'B';
+			} else if(y == 4 && x == 0) { //yellow start
+				gameBoard[x][y] = 'y';
+			} else if(y == 3 && x == 3) { //yellow end
+				gameBoard[x][y] = 'Y';
+			} else if(y == 3 && x == 4) { //orange start
+				gameBoard[x][y] = 'o';
+			} else if(y == 4 && x == 1) { //orange end
+				gameBoard[x][y] = 'O';
+			} else { //all other non-occupied places
+				gameBoard[x][y] = '0';
+			}
+		}
+	}
 
 }
 
@@ -471,75 +531,100 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
     int y0 = 0;  // starting y
     int y1 = 0;  // ending y
 
+	bool isLegal;
+
     // W UPWARDS
     if (direction == 1) {
-        x0 = startX;
-        x1 = endXRIGHT;
-        y0 = startY;
-        y1 = startY;
-        for (startY = boardY * 48; startY < endYUP; startY++) {
-            // Horizontal Line
-            y0 -= direction;
-            y1 -= direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        //fill_color(boardX, boardY, line_color);
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX][boardY - 1] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = endXRIGHT;
+			y0 = startY;
+			y1 = startY;
+			for (startY = boardY * 48; startY < endYUP; startY++) {
+				// Horizontal Line
+				y0 -= direction;
+				y1 -= direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			//fill_color(boardX, boardY, line_color);
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX][boardY - 1] = color;
+			}
+		}
+
     }
     // A LEFT
     else if (direction == 2) {
-        x0 = startX;
-        x1 = startX;
-        y0 = startY;
-        y1 = endYUP; // needsd checking
-        for (startX = boardX * 64; startX > endXLEFT; startX--) {
-            x0 -= direction;
-            x1 -= direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX - 1][boardY] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = startX;
+			y0 = startY;
+			y1 = endYUP; // needsd checking
+			for (startX = boardX * 64; startX > endXLEFT; startX--) {
+				x0 -= direction;
+				x1 -= direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX - 1][boardY] = color;
+			}
+		}
+
+
     }
     // S DOWNWARDS
     else if (direction == 3) {
-        x0 = startX;
-        x1 = endXRIGHT;
-        y0 = startY;
-        y1 = startY;
-        for (startY = boardY * 48; startY > endYDOWN; startY--) {
-            y0 += direction;
-            y1 += direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX][boardY + 1] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = endXRIGHT;
+			y0 = startY;
+			y1 = startY;
+			for (startY = boardY * 48; startY > endYDOWN; startY--) {
+				y0 += direction;
+				y1 += direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX][boardY + 1] = color;
+			}
+		}
     }
     // D RIGHTWARDS
     else if (direction == 4) {
-        x0 = startX;
-        x1 = x0;
-        y0 = startY;
-        y1 = endYUP; // needsd checking
-        for (startX = boardX * 64; startX < endXRIGHT; startX++) {
-            x0 += direction;
-            x1 += direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX + 1][boardY] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = x0;
+			y0 = startY;
+			y1 = endYUP; // needsd checking
+			for (startX = boardX * 64; startX < endXRIGHT; startX++) {
+				x0 += direction;
+				x1 += direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX + 1][boardY] = color;
+			}
+		}
     }
 }
 
@@ -804,27 +889,32 @@ void config_PS2s() {
 			} else if(data == 0x16) {
 				LED = 0x16;
 				keyPressed = '1';
+				color_select = RED;
 				//color = 'R';
 				//printf("1 pressed\n");
 			} else if(data == 0x1E) {
 				LED = 0x1E;
 				//color = 'G';
 				keyPressed = '2';
+				color_select =  GREEN;
 				//printf("2 pressed\n");
 			} else if(data == 0x26) {
 				LED = 0x26;
 				//color = 'B';
 				keyPressed = '3';
+				color_select = BLUE;
 				//printf("3 pressed\n");
 			} else if(data == 0x25) {
 				LED = 0x25;
 				//color = 'Y';
 				keyPressed = '4';
+				color_select = YELLOW;
 				//printf("4 pressed\n");
 			} else if(data == 0x2E) {
 				LED = 0x2E;
 				//color = 'O';
 				keyPressed = '5';
+				color_select = ORANGE;
 				//printf("5 pressed\n");
 
 			//error handling
@@ -833,6 +923,7 @@ void config_PS2s() {
 				//printf("unknown key pressed\n");
 				keyPressed = '?';
 				//color = 'B';
+				color_select = 10;
 			}
 		//}
 
@@ -1412,3 +1503,35 @@ bool isLegalMove(int color_select, char keyPressed) {
 		//gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
 	//}
 }
+
+// USELES CODE //
+
+// x and y are BOARD coordinates.
+// void animate (int x, int y, short int color, int board[][COLS]) {
+//     // add interrupt code here
+//     int direction = 0;
+//     printf("ok");
+//     // up
+//     if (keyPressed == 'W') {
+//         direction = 1;
+//         printf("yo fam");
+//         printf("\n");
+//         animate_line(x, y, direction, color, board);
+//     }
+//     // left
+//     else if (keyPressed == 'A') {
+//         direction = 2;
+//         animate_line(x, y, direction, color, board);
+//     }
+//     // down
+//     else if (keyPressed == 'S') {
+//         direction = 3;
+//         animate_line(x, y, direction, color, board);
+//     }
+//     // right
+//     else if (keyPressed == 'D') {
+//         direction = 4;
+//         animate_line(x, y, direction, color, board);
+//     }
+//
+// }

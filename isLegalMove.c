@@ -85,35 +85,6 @@ bool isLegalMove(int color_select, char keyPressed) {
 	//lowercase represents start, uppercase represents end
 	//1 represents occupied, 0 represents open
 	
-	int x = 0, y = 0;
-	for(x = 0; x < 5; x++) {
-		for(y = 0; y < 5; y++) {
-			if(x == 0 && y == 0) { //red start
-				gameBoard[x][y] = 'r';
-			} else if(y == 1 && x == 4) { //red end
-				gameBoard[x][y] = 'R';
-			} else if(y == 2 && x == 0) { //green start
-				gameBoard[x][y] = 'g';
-			} else if(y == 1 && x == 3) { //green end
-				gameBoard[x][y] = 'G';
-			} else if(y == 2 && x == 4) { //blue start
-				gameBoard[x][y] = 'b';
-			} else if(y == 2 && x == 1) { //blue end
-				gameBoard[x][y] = 'B';
-			} else if(y == 4 && x == 0) { //yellow start
-				gameBoard[x][y] = 'y';
-			} else if(y == 3 && x == 3) { //yellow end
-				gameBoard[x][y] = 'Y';
-			} else if(y == 3 && x == 4) { //orange start
-				gameBoard[x][y] = 'o';
-			} else if(y == 4 && x == 1) { //orange end
-				gameBoard[x][y] = 'O';
-			} else { //all other non-occupied places
-				gameBoard[x][y] = '0';
-			}
-		}
-	}
-	
 	//testing
 	/*
 	for(x = 0; x < 5; x++) {
@@ -123,7 +94,7 @@ bool isLegalMove(int color_select, char keyPressed) {
 		printf("\n");
 	}*/ 
 
-	bool gameOver = false;
+	//bool gameOver = false;
 	
 	//while(!gameOver) {
 		if(color_select == RED) {

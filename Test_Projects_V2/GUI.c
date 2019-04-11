@@ -42,7 +42,7 @@ int xpos_global, ypos_global;
 short int color_global;
 
 // Interrupts
-int color_select = 0;
+
 int numPressedW;
 int numPressedA;
 int numPressedS;
@@ -67,6 +67,7 @@ volatile bool resetGame = false;
 volatile bool pressedAgain = false;
 volatile char byte1, byte2, data;
 volatile char keyPressed;
+volatile int color_select = 0;
 
 bool keyRed = false;
 bool keyGreen = false;
@@ -78,6 +79,35 @@ bool keyOrange = false;
 int currX;
 int currY;
 
+//game legality
+bool isLegalMove(int color_select, char keyPressed);	
+
+//game board
+char gameBoard[5][5];
+
+//global variables for keeping track of game status
+bool gameOver = false;
+bool redPathFound = false;
+bool greenPathFound = false;
+bool bluePathFound = false;
+bool yellowPathFound = false;
+bool orangePathFound = false;
+
+//global variables for keeping track of position - initialized to the starting positions
+int redCurrentX = 0;
+int redCurrentY = 0;
+
+int greenCurrentX = 2;
+int greenCurrentY = 0;
+
+int blueCurrentX = 2;
+int blueCurrentY = 4;
+
+int yellowCurrentX = 4;
+int yellowCurrentY = 0;
+
+int orangeCurrentX = 3;
+int orangeCurrentY = 4;
 
 
 void initializeBoard (int board[][COLS]) {
@@ -107,6 +137,36 @@ void initializeBoard (int board[][COLS]) {
     // ORANGE
     board [4][1] = 5;
     board [3][4] = 5;
+	
+	//initializing the gameBoard variable
+	int x = 0, y = 0;
+	for(x = 0; x < 5; x++) {
+		for(y = 0; y < 5; y++) {
+			if(x == 0 && y == 0) { //red start
+				gameBoard[x][y] = 'r';
+			} else if(y == 1 && x == 4) { //red end
+				gameBoard[x][y] = 'R';
+			} else if(y == 2 && x == 0) { //green start
+				gameBoard[x][y] = 'g';
+			} else if(y == 1 && x == 3) { //green end
+				gameBoard[x][y] = 'G';
+			} else if(y == 2 && x == 4) { //blue start
+				gameBoard[x][y] = 'b';
+			} else if(y == 2 && x == 1) { //blue end
+				gameBoard[x][y] = 'B';
+			} else if(y == 4 && x == 0) { //yellow start
+				gameBoard[x][y] = 'y';
+			} else if(y == 3 && x == 3) { //yellow end
+				gameBoard[x][y] = 'Y';
+			} else if(y == 3 && x == 4) { //orange start
+				gameBoard[x][y] = 'o';
+			} else if(y == 4 && x == 1) { //orange end
+				gameBoard[x][y] = 'O';
+			} else { //all other non-occupied places
+				gameBoard[x][y] = '0';
+			}
+		}
+	}
 
 }
 
@@ -483,76 +543,101 @@ void animate_line(int boardX, int boardY, int direction, short int line_color, s
     int x1 = 0;  // ending x
     int y0 = 0;  // starting y
     int y1 = 0;  // ending y
+	
+	bool isLegal;
 
     // W UPWARDS
     if (direction == 1) {
-        x0 = startX;
-        x1 = endXRIGHT;
-        y0 = startY;
-        y1 = startY;
-        for (startY = boardY * 48; startY < endYUP; startY++) {
-            // Horizontal Line
-            y0 -= direction;
-            y1 -= direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            //draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        //fill_color(boardX, boardY, line_color);
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX][boardY - 1] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+		
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = endXRIGHT;
+			y0 = startY;
+			y1 = startY;
+			for (startY = boardY * 48; startY < endYUP; startY++) {
+				// Horizontal Line
+				y0 -= direction;
+				y1 -= direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			//fill_color(boardX, boardY, line_color);
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX][boardY - 1] = color;
+			}
+		}
+        
     }
     // A LEFT
     else if (direction == 2) {
-        x0 = startX;
-        x1 = startX;
-        y0 = startY;
-        y1 = endYUP; // needsd checking
-        for (startX = boardX * 64; startX > endXLEFT; startX--) {
-            x0 -= direction;
-            x1 -= direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            //draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX - 1][boardY] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+		
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = startX;
+			y0 = startY;
+			y1 = endYUP; // needsd checking
+			for (startX = boardX * 64; startX > endXLEFT; startX--) {
+				x0 -= direction;
+				x1 -= direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX - 1][boardY] = color;
+			}
+		}
+		
+        
     }
     // S DOWNWARDS
     else if (direction == 3) {
-        x0 = startX;
-        x1 = endXRIGHT;
-        y0 = startY;
-        y1 = startY;
-        for (startY = boardY * 48; startY > endYDOWN; startY--) {
-            y0 += direction;
-            y1 += direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            //draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX][boardY + 1] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+		
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = endXRIGHT;
+			y0 = startY;
+			y1 = startY;
+			for (startY = boardY * 48; startY > endYDOWN; startY--) {
+				y0 += direction;
+				y1 += direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX][boardY + 1] = color;
+			}
+		}
     }
     // D RIGHTWARDS
     else if (direction == 4) {
-        x0 = startX;
-        x1 = x0;
-        y0 = startY;
-        y1 = endYUP; // needsd checking
-        for (startX = boardX * 64; startX < endXRIGHT; startX++) {
-            x0 += direction;
-            x1 += direction;
-            draw_line(x0, x1, y0, y1, line_color);
-            wait_for_vsync();
-            //draw_line(x0, x1, y0, y1, 0x0000);
-        }
-        if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
-            board[boardX + 1][boardY] = color;
-        }
+		isLegal = isLegalMove(color_select, keyPressed);
+		
+		if(isLegal) {
+			printf("legal move"); //testing
+			x0 = startX;
+			x1 = x0;
+			y0 = startY;
+			y1 = endYUP; // needsd checking
+			for (startX = boardX * 64; startX < endXRIGHT; startX++) {
+				x0 += direction;
+				x1 += direction;
+				draw_line(x0, x1, y0, y1, line_color);
+				wait_for_vsync();
+				//draw_line(x0, x1, y0, y1, 0x0000);
+			}
+			if (boardX <= 5 && boardY <= 5 && boardX >= 0 && boardY >= 0) {
+				board[boardX + 1][boardY] = color;
+			}
+		}
     }
 }
 
@@ -822,27 +907,32 @@ void config_PS2s() {
 			} else if(data == 0x16) {
 				LED = 0x16;
 				keyPressed = '1';
+				color_select = RED;
 				//color = 'R';
 				//printf("1 pressed\n");
 			} else if(data == 0x1E) {
 				LED = 0x1E;
 				//color = 'G';
 				keyPressed = '2';
+				color_select =  GREEN;
 				//printf("2 pressed\n");
 			} else if(data == 0x26) {
 				LED = 0x26;
 				//color = 'B';
 				keyPressed = '3';
+				color_select = BLUE;
 				//printf("3 pressed\n");
 			} else if(data == 0x25) {
 				LED = 0x25;
 				//color = 'Y';
 				keyPressed = '4';
+				color_select = YELLOW;
 				//printf("4 pressed\n");
 			} else if(data == 0x2E) {
 				LED = 0x2E;
 				//color = 'O';
 				keyPressed = '5';
+				color_select = ORANGE;
 				//printf("5 pressed\n");
 
 			//error handling
@@ -851,6 +941,7 @@ void config_PS2s() {
 				//printf("unknown key pressed\n");
 				keyPressed = '?';
 				//color = 'B';
+				color_select = 10;
 			}
 		//}
 
@@ -918,6 +1009,486 @@ void set_A9_IRQ_stack() {
 	/* go back to SVC mode before executing subroutine return! */
 	mode = 0b11010011;
 	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
+}
+
+bool isLegalMove(int color_select, char keyPressed) {
+	//initialize gameBoard:
+	//lowercase represents start, uppercase represents end
+	//1 represents occupied, 0 represents open
+	
+	//testing
+	/*
+	for(x = 0; x < 5; x++) {
+		for(int y = 0; y < 5; y++) {
+			printf("%c ", gameBoard[x][y]);
+		}
+		printf("\n");
+	}*/ 
+
+	//bool gameOver = false;
+	
+	//while(!gameOver) {
+		if(color_select == RED) {
+			if(keyPressed == 'W') {
+				int tempY = redCurrentY - 1;
+				
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][redCurrentX] != '0' || redPathFound) { 
+					redCurrentY = redCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][redCurrentX] == 'R') { //reached the end
+						redPathFound = true;
+						redCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						redCurrentY = tempY; //change Y accordingly
+						gameBoard[redCurrentY][redCurrentX] = '1'; //mark position as occupied
+					}
+					
+					return true;
+				}
+				
+			} else if(keyPressed == 'A') {
+				int tempX = redCurrentX - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[redCurrentY][tempX] != '0' || redPathFound) { 
+					redCurrentX = redCurrentX;
+					return false;
+				} else {
+					if(gameBoard[redCurrentY][tempX] == 'R') { //reached the end
+						redPathFound = true;
+						redCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						redCurrentX = tempX; //change Y accordingly
+						gameBoard[redCurrentY][redCurrentX] = '1'; //mark position as occupied
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'S') {
+				int tempY = redCurrentY + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][redCurrentX] != '0' || redPathFound) { 
+					redCurrentY = redCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][redCurrentX] == 'R') { //reached the end
+						redPathFound = true;
+						redCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						redCurrentY = tempY; //change Y accordingly
+						gameBoard[redCurrentY][redCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'D') {
+				int tempX = redCurrentX + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[redCurrentY][tempX] != '0' || redPathFound) { 
+					redCurrentX = redCurrentX;
+					return false;
+				} else {
+					if(gameBoard[redCurrentY][tempX] == 'R') { //reached the end
+						redPathFound = true;
+						redCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						redCurrentX = tempX; //change Y accordingly
+						gameBoard[redCurrentY][redCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else {
+				redCurrentX = redCurrentX;
+				redCurrentY = redCurrentY;
+				return false;
+			}
+			
+		} else if(color_select == GREEN) {
+			if(keyPressed == 'W') {
+				int tempY = greenCurrentY - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][greenCurrentX] != '0' || greenPathFound) { 
+					greenCurrentY = greenCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][greenCurrentX] == 'G') { //reached the end
+						greenPathFound = true;
+						greenCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						greenCurrentY = tempY; //change Y accordingly
+						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'A') {
+				int tempX = greenCurrentX - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[greenCurrentY][tempX] != '0' || greenPathFound) { 
+					greenCurrentX = greenCurrentX;
+					return false;
+				} else {
+					if(gameBoard[greenCurrentY][tempX] == 'G') { //reached the end
+						greenPathFound = true;
+						greenCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						greenCurrentX = tempX; //change Y accordingly
+						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'S') {
+				int tempY = greenCurrentY + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][greenCurrentX] != '0' || greenPathFound) { 
+					greenCurrentY = greenCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][greenCurrentX] == 'G') { //reached the end
+						greenPathFound = true;
+						greenCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						greenCurrentY = tempY; //change Y accordingly
+						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'D') {
+				int tempX = greenCurrentX + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[greenCurrentY][tempX] != '0' || greenPathFound) { 
+					greenCurrentX = greenCurrentX;
+					return false;
+				} else {
+					if(gameBoard[greenCurrentY][tempX] == 'G') { //reached the end
+						greenPathFound = true;
+						greenCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						greenCurrentX = tempX; //change Y accordingly
+						gameBoard[greenCurrentY][greenCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else {
+				greenCurrentX = greenCurrentX;
+				greenCurrentY = greenCurrentY;
+				return false;
+			}
+			
+		} else if(color_select == BLUE) {
+			
+			if(keyPressed == 'W') {
+				int tempY = blueCurrentY - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][blueCurrentX] != '0' || bluePathFound) { 
+					blueCurrentY = blueCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][blueCurrentX] == 'B') { //reached the end
+						bluePathFound = true;
+						blueCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						blueCurrentY = tempY; //change Y accordingly
+						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'A') {
+				int tempX = blueCurrentX - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[blueCurrentY][tempX] != '0' || bluePathFound) { 
+					blueCurrentX = blueCurrentX;
+					return false;
+				} else {
+					if(gameBoard[blueCurrentY][tempX] == 'B') { //reached the end
+						bluePathFound = true;
+						blueCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						blueCurrentX = tempX; //change Y accordingly
+						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'S') {
+				int tempY = blueCurrentY + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][blueCurrentX] != '0' || bluePathFound) { 
+					blueCurrentY = blueCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][blueCurrentX] == 'B') { //reached the end
+						bluePathFound = true;
+						blueCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						blueCurrentY = tempY; //change Y accordingly
+						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'D') {
+				int tempX = blueCurrentX + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[blueCurrentY][tempX] != '0' || bluePathFound) { 
+					blueCurrentX = blueCurrentX;
+					return false;
+				} else {
+					if(gameBoard[tempX][blueCurrentX] == 'B') { //reached the end
+						bluePathFound = true;
+						blueCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						blueCurrentX = tempX; //change Y accordingly
+						gameBoard[blueCurrentY][blueCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else {
+				blueCurrentX = blueCurrentX;
+				blueCurrentY = blueCurrentY;
+				return false;
+			}
+			
+		} else if(color_select == YELLOW) {
+			
+			if(keyPressed == 'W') {
+				int tempY = yellowCurrentY - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][yellowCurrentX] != '0' || yellowPathFound) { 
+					yellowCurrentY = yellowCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][yellowCurrentX] == 'Y') { //reached the end
+						yellowPathFound = true;
+						yellowCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						yellowCurrentY = tempY; //change Y accordingly
+						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'A') {
+				int tempX = yellowCurrentX - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[yellowCurrentY][tempX] != '0' || yellowPathFound) { 
+					yellowCurrentX = yellowCurrentX;
+					return false;
+				} else {
+					if(gameBoard[yellowCurrentY][tempX] == 'Y') { //reached the end
+						yellowPathFound = true;
+						yellowCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						yellowCurrentX = tempX; //change Y accordingly
+						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'S') {
+				int tempY = yellowCurrentY + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][yellowCurrentX] != '0' || yellowPathFound) { 
+					yellowCurrentY = yellowCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][yellowCurrentX] == 'Y') { //reached the end
+						yellowPathFound = true;
+						yellowCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						yellowCurrentY = tempY; //change Y accordingly
+						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'D') {
+				int tempX = yellowCurrentX + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[yellowCurrentY][tempX] != '0' || yellowPathFound) { 
+					yellowCurrentX = yellowCurrentX;
+					return false;
+				} else {
+					if(gameBoard[tempX][yellowCurrentX] == 'Y') { //reached the end
+						yellowPathFound = true;
+						yellowCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						yellowCurrentX = tempX; //change Y accordingly
+						gameBoard[yellowCurrentY][yellowCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else {
+				yellowCurrentX = yellowCurrentX;
+				yellowCurrentY = yellowCurrentY;
+				return false;
+			}
+			
+		} else if(color_select == ORANGE) {
+			
+			if(keyPressed == 'W') {
+				int tempY = orangeCurrentY - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][orangeCurrentX] != '0' || orangePathFound) { 
+					orangeCurrentY = orangeCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][orangeCurrentX] == 'O') { //reached the end
+						orangePathFound = true;
+						orangeCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						orangeCurrentY = tempY; //change Y accordingly
+						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'A') {
+				int tempX = orangeCurrentX - 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[orangeCurrentY][tempX] != '0' || orangePathFound) { 
+					orangeCurrentX = orangeCurrentX;
+					return false;
+				} else {
+					if(gameBoard[orangeCurrentY][tempX] == 'O') { //reached the end
+						orangePathFound = true;
+						orangeCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						orangeCurrentX = tempX; //change Y accordingly
+						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'S') {
+				int tempY = orangeCurrentY + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempY < 0 || tempY > 4 || gameBoard[tempY][orangeCurrentX] != '0' || orangePathFound) { 
+					orangeCurrentY = orangeCurrentY;
+					return false;
+				} else {
+					if(gameBoard[tempY][orangeCurrentX] == 'O') { //reached the end
+						orangePathFound = true;
+						orangeCurrentY = tempY;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						orangeCurrentY = tempY; //change Y accordingly
+						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else if(keyPressed == 'D') {
+				int tempX = orangeCurrentX + 1;
+				
+				//out of bounds, trying to move to an already occupied spot, or game over: don't change position
+				if(tempX < 0 || tempX > 4 || gameBoard[orangeCurrentY][tempX] != '0' || orangePathFound) { 
+					orangeCurrentX = orangeCurrentX;
+					return false;
+				} else {
+					if(gameBoard[tempX][orangeCurrentX] == 'O') { //reached the end
+						orangePathFound = true;
+						orangeCurrentX = tempX;
+						gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+						//don't want to change the array at [currentX][currentY]
+					} else { //didn't reach the end, but is a valid move
+						orangeCurrentX = tempX; //change Y accordingly
+						gameBoard[orangeCurrentY][orangeCurrentX] = '1'; //mark position as occupied
+						
+					}
+					return true;
+				}
+				
+			} else {
+				orangeCurrentX = orangeCurrentX;
+				orangeCurrentY = orangeCurrentY;
+				return false;
+			}
+			
+		}
+		
+		//game is over if all of these are true
+		//gameOver = redPathFound && greenPathFound && bluePathFound && yellowPathFound && orangePathFound;
+	//}
 }
 
 // USELES CODE //

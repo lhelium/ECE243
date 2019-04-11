@@ -38,7 +38,7 @@ void fill_color(int x, int y, short int color);
 void initializeBoard (int board[][COLS]);
 void animate_line(int boardX, int boardY, int direction, short int line_color, short int color, int board[][COLS]);
 void animate (int x, int y, short int color, int board[][COLS]);
-void draw_piece(int piecex, int piecey, short int color) ;
+void draw_piece(int piecex, int piecey, int currDirection, short int color);
 
 int xpos_global, ypos_global;
 short int color_global;
@@ -79,8 +79,9 @@ bool keyYellow = false;
 bool keyOrange = false;
 
 //current position
-int currX;
-int currY;
+int currX = 1000;
+int currY = 1000;
+int currDirection = 1000;
 
 //game legality
 bool isLegalMove(int color_select, char keyPressed);
@@ -357,8 +358,7 @@ int main(void) {
         else if (keyPressed == '5') {
             keyOrange = true;
         }
-        // actual key presses:
-
+        // actual key presses
         if (keyRed && (keyPressed == 'W' || keyPressed == 'A' || keyPressed == 'S' || keyPressed == 'D')) {
             // turn off all other flags
             keyGreen = false;
@@ -378,18 +378,22 @@ int main(void) {
                 direction  = 1;
                 animate_line(x, y, direction, RED_U16, RED, board);
                 keyRed = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'A') {
                 direction  = 2;
                 animate_line(x, y, direction, RED_U16, RED, board);
                 keyRed = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'S') {
                 direction  = 3;
                 animate_line(x, y, direction, RED_U16, RED, board);
                 keyRed = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'D') {
                 direction  = 4;
                 animate_line(x, y, direction, RED_U16, RED, board);
-                keyRed = false; // turn off the flag
+                keyRed = false; // turn off the
+                currDirection = direction; // this is for the drawing of a square
             }
 
 //            draw_piece(x, y, WHITE_U16);
@@ -414,18 +418,22 @@ int main(void) {
                 direction  = 1;
                 animate_line(x, y, direction, GREEN_U16, GREEN, board);
                 keyGreen = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'A') {
                 direction  = 2;
                 animate_line(x, y, direction, GREEN_U16, GREEN, board);
                 keyGreen = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'S') {
                 direction  = 3;
                 animate_line(x, y, direction, GREEN_U16, GREEN, board);
                 keyGreen = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'D') {
                 direction  = 4;
                 animate_line(x, y, direction, GREEN_U16, GREEN, board);
                 keyGreen = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             }
 
 //         draw_piece(x, y, WHITE_U16);
@@ -449,18 +457,22 @@ int main(void) {
                 direction  = 1;
                 animate_line(x, y, direction, BLUE_U16, BLUE, board);
                 keyBlue = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'A') {
                 direction  = 2;
                 animate_line(x, y, direction, BLUE_U16, BLUE, board);
                 keyBlue = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'S') {
                 direction  = 3;
                 animate_line(x, y, direction, BLUE_U16, BLUE, board);
                 keyBlue = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'D') {
                 direction  = 4;
                 animate_line(x, y, direction, BLUE_U16, BLUE, board);
                 keyBlue = false; // turn off the flag
+                currDirection = direction; // this is for the drawing of a square
             }
 
 //            draw_piece(x, y, WHITE_U16);
@@ -484,18 +496,22 @@ int main(void) {
                 direction  = 1;
                 animate_line(x, y, direction, YELLOW_U16, YELLOW, board);
                 keyYellow = false;
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'A') {
                 direction  = 2;
                 animate_line(x, y, direction,  YELLOW_U16, YELLOW, board);
                 keyYellow = false;
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'S') {
                 direction  = 3;
                 animate_line(x, y, direction,  YELLOW_U16, YELLOW,board);
                 keyYellow = false;
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'D') {
                 direction  = 4;
                 animate_line(x, y, direction,  YELLOW_U16,YELLOW, board);
                 keyYellow = false;
+                currDirection = direction; // this is for the drawing of a square
             }
 
 //            draw_piece(x, y, WHITE_U16);
@@ -519,23 +535,27 @@ int main(void) {
                 direction  = 1;
                 animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
                 keyOrange = false;
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'A') {
                 direction  = 2;
                 animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
                 keyOrange = false;
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'S') {
                 direction  = 3;
                 animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
                 keyOrange = false;
+                currDirection = direction; // this is for the drawing of a square
             } else if (keyPressed == 'D') {
                 direction  = 4;
                 animate_line(x, y, direction, ORANGE_U16, ORANGE, board);
                 keyOrange = false;
+                currDirection = direction; // this is for the drawing of a square
             }
 
-//           draw_piece(currX, currY, WHITE_U16);
         }
 
+       draw_piece(currX, currY, currDirection, WHITE_U16);
        wait_for_vsync(); // swap front and back buffers on VGA vertical sync
        pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
     }
@@ -549,14 +569,22 @@ void plot_pixel(int x, int y, short int line_color)
     *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
 }
 
-void draw_piece(int piecex, int piecey, short int color) {
-    int x = -16;
-    int y = -16;
-    for (x = -16; x <= 16; x++) {
-        for (y = -16; y <= 16; y++) {
-            //if (x*x + y*y <= pieceRadius* pieceRadius) {
-                plot_pixel(piecex + x, piecey + y, color);
-            //}
+void draw_piece(int piecex, int piecey, int currDirection, short int color) {
+    int actualx = piecex * 64 + 23;
+    int actualy = piecey * 48 + 16;
+    int x = 0;
+    int y = 0;
+    for (x = 0; x <= 16; x++) {
+        for (y = 0; y <= 16; y++) {
+            if (currDirection == 1) { //UP
+                plot_pixel(actualx + x, actualy + y - 48, color);
+            } else if (currDirection == 2) { // LEFT
+                plot_pixel(actualx + x - 64, actualy + y, color);
+            } else if (currDirection == 3) { // DOWN
+                plot_pixel(actualx + x, actualy + y + 48, color);
+            } else if (currDirection == 4) { // RIGHT
+                plot_pixel(actualx + x + 64, actualy + y, color);
+            }
         }
     }
 }
